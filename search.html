@@ -1,295 +1,657 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <title>검색</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    body { font-family: 'Malgun Gothic', Arial, sans-serif; color: #222; font-size: 1em; background: #F1F4F8; }
-    .controls { display: flex; gap: 12px; align-items: center; margin-top: 24px; margin-bottom: 40px; }
-    .controls input, .controls select { background: #fff; color: #222; border: 2px solid #222; border-radius: 5px; padding: 8px 8px; font-size: 1.1em; }
-    .controls input { width: 320px; margin-left: 12px; }
-    .count-box { margin: 24px 0 18px 0; font-size: 1.5em; font-weight: 600; }
-    table { border-collapse: collapse; width: 100%; background: #fff; font-size: 0.9em; }
-    td { border: 1px solid #e0e0e0; padding: 8px 6px; text-align: center; }
-    th { background: #2c3e50; padding: 8px 6px; color: #fff; }
-    .col-캐슷 { text-align: left !important; }
-    .fa-link { color: #2196f3; font-size: 1em; }
-    .icon-link { display: inline-block; padding: 0px 2px; }
-    .highlight { background: #ffe066; color: #222; font-weight: 600; }
-    .selected-row { background: #fef3c7 !important; color: #333 !important; font-weight: 600; }
-  </style>
-</head>
-<body>
-  <div class="controls">
-    <input type="text" id="search" placeholder="검색어 입력">
-    <select id="selected_col">
-      <option value="">전체</option>
-      <option value="날짜">날짜</option>
-      <option value="시간">시간</option>
-      <option value="제작사">제작사</option>
-      <option value="시즌">시즌</option>
-      <option value="장르">장르</option>
-      <option value="극">극</option>
-      <option value="자n">자n</option>
-      <option value="캐슷">캐슷</option>
-      <option value="극장">극장</option>
-    </select>
-  </div>
-  <div id="count-box" class="count-box"></div>
-  <table id="data-table">
-    <thead>
-      <tr>
-        <th>날짜</th>
-        <th>시간</th>
-        <th>제작사</th>
-        <th>시즌</th>
-        <th>장르</th>
-        <th>극</th>
-        <th>자n</th>
-        <th class="col-캐슷">캐슷</th>
-        <th>극장</th>
-        <th>캐보</th>
-        <th>후기</th>
-        <th>L1</th>
-        <th>L2</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <script>
-    const showTitleMap = {
-      '스위니': { ko: '스위니 토드', en: 'Sweeney Todd' },
-      '매다리': { ko: '매디슨 카운티의 다리', en: 'The Bridges of Madison County' },
-      '킹키': { ko: '킹키부츠', en: 'Kinky Boots' },
-      '짘슈': { ko: '지저스 크라이스트 수퍼스타', en: 'Jesus Christ Superstar' },
-      '넥': { ko: '넥스트 투 노멀', en: 'Next to Normal' },
-      '하타': { ko: '하데스타운', en: 'Hadestown' },
-      '물랑': { ko: '물랑루즈!', en: 'Moulin Rouge!' },
-      '오유': { ko: '오페라의 유령', en: 'The Phantom of the Opera'},
-      '레미': { ko: '레미제라블', en: 'Les Misérables' },
-      '라이온킹': { ko: '라이온 킹', en: 'The Lion King' },
-      '럽네다': { ko: '러브 네버 다이즈', en: 'Love Never Dies' },
-      '백퓨': { ko: '백 투 더 퓨처', en: 'Back to the Future' },
-      '시카고': { ko: '시카고', en: 'Chicago' },
-      '킴벌리': { ko: '킴벌리 아킴보', en: 'Kimberly Akimbo' },
-      '알라딘': { ko: '알라딘', en: 'Aladdin' },
-      '구텐': { ko: '구텐버그', en: 'Gutenberg!' },
-      '위키드': { ko: '위키드', en: 'Wicked' },
-      '저받아': { ko: '해리포터와 저주받은 아이', en: 'Harry Potter and the Cursed Child' },
-      '프로즌': { ko: '겨울왕국', en: 'Frozen' },
-      '몰몬': { ko: '더 북 오브 몰몬', en: 'The Book of Mormon' },
-      '스팸': { ko: '스팸어랏', en: 'Monty Python\'s Spamalot' },
-      '스폰지밥': { ko: '네모바지 스폰지밥', en: 'The SpongeBob Musical' },
-      '식스': { ko: '식스 더 뮤지컬', en: 'Six' },
-      '워터포': { ko: '워터 포 엘리펀트', en: 'Water for Elephants' },
-      '아웃사이더': { ko: '아웃사이더', en: 'The Outsiders' },
-      '노트북': { ko: '노트북', en: 'The Notebook' },
-      '개츠비': { ko: '위대한 개츠비', en: 'The Great Gatsby' }
-    };
-
-    const colNames = ['날짜','시간','제작사','시즌','장르','극','자n','캐슷','극장','캐보','후기','L1','L2'];
-    const buttonCols = ['캐보','후기','L1','L2'];
-    let data = [];
-
-    function excelDateToStr(excelDate) {
-      if (typeof excelDate === 'number') {
-        const date = new Date(Date.UTC(1899, 11, 30) + excelDate * 86400000);
-        return date.toISOString().slice(0,10);
+  <head>
+    <meta
+      charset="UTF-8"
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>검색</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      @font-face {
+        font-family: "Freesentation";
+        src: url("./Freesentation-3Light.ttf") format("truetype");
+        font-weight: 300;
       }
-      return excelDate;
-    }
-    function excelTimeToStr(excelTime) {
-      if (typeof excelTime === 'number') {
-        let totalMinutes = Math.round(excelTime * 24 * 60);
-        let hours = Math.floor(totalMinutes / 60);
-        let minutes = totalMinutes % 60;
-        return (hours<10?'0':'')+hours+':'+(minutes<10?'0':'')+minutes;
-      } else if (typeof excelTime === 'string' && excelTime.match(/^\d{1,2}:\d{2}/)) {
-        return excelTime.slice(0,5);
+      @font-face {
+        font-family: "Freesentation";
+        src: url("./Freesentation-6SemiBold.ttf") format("truetype");
+        font-weight: 600;
       }
-      return excelTime;
-    }
-    function formatCastDisplay(str) {
-      return str.trim().replace(/ /g, ', ').replace(/_/g, ' ');
-    }
-    function highlightText(text, keyword) {
-      if (!keyword) return text;
-      const re = new RegExp(keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-      return text.replace(re, match => `<span class="highlight">${match}</span>`);
-    }
-
-    function getDisplayTitle(showName, seatInfo) {
-      for (const [key, pair] of Object.entries(showTitleMap)) {
-        if (showName === key || showName === pair.ko || showName === pair.en) {
-          if (seatInfo && seatInfo.includes('(')) {
-            return pair.en;
-          }
-          return pair.ko;
+      body,
+      input,
+      select,
+      table,
+      th,
+      td {
+        font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
+      }
+      body {
+        font-weight: 300;
+        color: #222;
+        font-size: 1em;
+        background: #f1f4f8;
+      }
+      .controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-top: 24px;
+        margin-bottom: 40px;
+      }
+      .controls input,
+      .controls select {
+        background: #fff;
+        color: #222;
+        border: 2px solid #222;
+        border-radius: 5px;
+        padding: 8px;
+        font-size: 1.1em;
+      }
+      .controls input {
+        width: 320px;
+        margin-left: 12px;
+      }
+      .count-box {
+        margin: 24px 0 18px;
+        font-size: 1.5em;
+        font-weight: 600;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        background: #fff;
+        font-size: 0.9em;
+      }
+      td {
+        border: 1px solid #e0e0e0;
+        padding: 8px 6px;
+        text-align: center;
+      }
+      th {
+        background: #2c3e50;
+        padding: 8px 6px;
+        color: #fff;
+      }
+      th.col-CB,
+      td.col-CB {
+        display: none;
+      }
+      .col-캐슷 {
+        text-align: left !important;
+        cursor: pointer;
+      }
+      .fa-link {
+        color: #2196f3;
+        font-size: 1em;
+      }
+      .icon-link {
+        display: inline-block;
+        padding: 0 2px;
+      }
+      .highlight {
+        background: #ffe066;
+        color: #222;
+        font-weight: 600;
+      }
+      .selected-row {
+        background: #fef3c7 !important;
+        color: #333 !important;
+        font-weight: 600;
+      }
+      #cast-modal {
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+      }
+      #cast-modal .modal-content {
+        background: #fff;
+        text-align: center;
+        border-radius: 10px;
+        padding: 28px 20px;
+        min-width: 300px;
+        max-width: 635px;
+        max-height: 70vh;
+        line-height: 1.5;
+        color: #222;
+        box-shadow: 0 6px 32px #0002;
+        position: relative;
+        font-size: 1.05em;
+        font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
+        font-weight: 300;
+        animation: popIn 0.2s;
+        overflow-y: auto;
+      }
+      #cast-modal .modal-content strong {
+        font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
+        font-weight: 600;
+        color: #222;
+      }
+      @media (max-width: 600px) {
+        #cast-modal .modal-content {
+          min-width: 90vw !important;
+          max-width: 95vw !important;
+          width: 95vw !important;
+          box-sizing: border-box;
+          font-size: 0.8em;
+        }
+        th.col-시간,
+        td.col-시간,
+        th.col-제작사,
+        td.col-제작사,
+        th.col-시즌,
+        td.col-시즌,
+        th.col-캐보,
+        td.col-캐보,
+        th.col-후기,
+        td.col-후기,
+        th.col-L1,
+        td.col-L1,
+        th.col-L2,
+        td.col-L2,
+        th.col-장르,
+        td.col-장르 {
+          display: none !important;
+        }
+        .mobile-date-time {
+          line-height: 1.6;
+          display: inline-block;
         }
       }
-      return showName;
-    }
-
-    window.onload = function() {
-      fetch('RawData.xlsx')
-        .then(res => res.arrayBuffer())
-        .then(dataArr => {
-          const wb = XLSX.read(dataArr, {type: 'array'});
-          const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:""});
-          const header = sheet[0];
-          const rows = sheet.slice(1);
-          const showIdx = colNames.map(cn => header.indexOf(cn));
-          data = rows.map(row => showIdx.map(idx => row[idx]));
-          const tIdx = colNames.indexOf('시간'), dIdx = colNames.indexOf('날짜');
-          data.forEach(r => {
-            r[dIdx] = excelDateToStr(r[dIdx]);
-            r[tIdx] = excelTimeToStr(r[tIdx]);
-          });
-          filterData();
-        })
-        .catch(err => {
-          alert('파일을 불러올 수 없습니다.');
-          console.error(err);
+      #cast-modal .close-btn {
+        position: absolute;
+        top: 10px;
+        right: 14px;
+        background: none;
+        border: none;
+        color: #666;
+        font-size: 1.5em;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 1;
+      }
+      #cast-modal .close-btn:hover {
+        color: #222;
+        background: none;
+      }
+      #data-table,
+      #data-table th,
+      #data-table td {
+        font-size: 0.91em;
+      }
+      @keyframes popIn {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="controls">
+      <input type="text" id="search" placeholder="검색어 입력" />
+      <select id="selected_col">
+        <option value="">전체</option>
+        <option value="날짜">날짜</option>
+        <option value="시간">시간</option>
+        <option value="제작사">제작사</option>
+        <option value="시즌">시즌</option>
+        <option value="장르">장르</option>
+        <option value="극">극</option>
+        <option value="자n">자n</option>
+        <option value="캐슷">캐슷</option>
+        <option value="극장">극장</option>
+      </select>
+    </div>
+    <div id="count-box" class="count-box"></div>
+    <table id="data-table">
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th class="col-시간">시간</th>
+          <th class="col-제작사">제작사</th>
+          <th class="col-시즌">시즌</th>
+          <th class="col-장르">장르</th>
+          <th>극</th>
+          <th>자n</th>
+          <th class="col-캐슷">캐슷</th>
+          <th>극장</th>
+          <th class="col-캐보">캐보</th>
+          <th class="col-후기">후기</th>
+          <th class="col-L1">L1</th>
+          <th class="col-L2">L2</th>
+          <th class="col-CB">CB</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="cast-modal">
+      <div class="modal-content">
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+        <div id="cast-modal-content"></div>
+      </div>
+    </div>
+    <script>
+      const showTitleMap = {
+        스위니: { ko: "스위니 토드", en: "Sweeney Todd" },
+        매다리: {
+          ko: "매디슨 카운티의 다리",
+          en: "The Bridges of Madison County",
+        },
+        킹키: { ko: "킹키부츠", en: "Kinky Boots" },
+        짘슈: {
+          ko: "지저스 크라이스트 수퍼스타",
+          en: "Jesus Christ Superstar",
+        },
+        넥: { ko: "넥스트 투 노멀", en: "Next to Normal" },
+        하타: { ko: "하데스타운", en: "Hadestown" },
+        물랑: { ko: "물랑루즈!", en: "Moulin Rouge!" },
+        오유: { ko: "오페라의 유령", en: "The Phantom of the Opera" },
+        레미: { ko: "레미제라블", en: "Les Misérables" },
+        라이온킹: { ko: "라이온 킹", en: "The Lion King" },
+        럽네다: { ko: "러브 네버 다이즈", en: "Love Never Dies" },
+        백퓨: { ko: "백 투 더 퓨처", en: "Back to the Future" },
+        시카고: { ko: "시카고", en: "Chicago" },
+        킴벌리: { ko: "킴벌리 아킴보", en: "Kimberly Akimbo" },
+        알라딘: { ko: "알라딘", en: "Aladdin" },
+        구텐: { ko: "구텐버그", en: "Gutenberg!" },
+        위키드: { ko: "위키드", en: "Wicked" },
+        저받아: {
+          ko: "해리포터와 저주받은 아이",
+          en: "Harry Potter and the Cursed Child",
+        },
+        프로즌: { ko: "겨울왕국", en: "Frozen" },
+        몰몬: { ko: "더 북 오브 몰몬", en: "The Book of Mormon" },
+        스팸: { ko: "스팸어랏", en: "Monty Python's Spamalot" },
+        스폰지밥: { ko: "네모바지 스폰지밥", en: "The SpongeBob Musical" },
+        식스: { ko: "식스 더 뮤지컬", en: "Six" },
+        워터포: { ko: "워터 포 엘리펀트", en: "Water for Elephants" },
+        아웃사이더: { ko: "아웃사이더", en: "The Outsiders" },
+        노트북: { ko: "노트북", en: "The Notebook" },
+        개츠비: { ko: "위대한 개츠비", en: "The Great Gatsby" },
+      };
+      const colNames = [
+        "날짜",
+        "시간",
+        "제작사",
+        "시즌",
+        "장르",
+        "극",
+        "자n",
+        "캐슷",
+        "극장",
+        "캐보",
+        "후기",
+        "L1",
+        "L2",
+        "CB",
+      ];
+      const buttonCols = ["캐보", "후기", "L1", "L2"];
+      let data = [];
+      let castNotesArr = [];
+      fetch("cast_notes.json")
+        .then((res) => res.json())
+        .then((json) => {
+          castNotesArr = json;
         });
-    };
-
-    function renderTable(filtered) {
-      const search = document.getElementById('search').value.trim();
-      const tbody = document.querySelector('#data-table tbody');
-      tbody.innerHTML = '';
-      filtered.forEach((row, rowIdx) => {
-        const tr = document.createElement('tr');
-        row.forEach((cell, idx) => {
-          const col = colNames[idx];
-          const td = document.createElement('td');
-          if (col === '캐슷') td.className = 'col-캐슷';
-          if (buttonCols.includes(col)) {
-            const url = (cell || '').trim();
-            if (url && url !== '-') {
-              const a = document.createElement('a');
-              a.href = url;
-              a.target = '_blank';
-              a.className = 'icon-link';
-              a.innerHTML = '<i class="fa-solid fa-link"></i>';
-              td.appendChild(a);
-            }
-          } else if (col === '캐슷') {
-            let disp = cell ? formatCastDisplay(String(cell)) : '';
-            td.innerHTML = highlightText(disp, search);
-          } else if (col === '극') {
-            const seatInfo = row[colNames.indexOf('자n')];
-            const showName = cell;
-            td.innerHTML = highlightText(getDisplayTitle(showName, seatInfo), search);
-          } else {
-            td.innerHTML = highlightText(String(cell ?? ''), search);
-          }
-          td.addEventListener('click', function() {
-            tbody.querySelectorAll('tr').forEach(tr2 => tr2.classList.remove('selected-row'));
-            tr.classList.add('selected-row');
-          });
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-    }
-
-    function renderCount(filtered) {
-      const 본_횟수 = filtered.length;
-      const 극Idx = colNames.indexOf('극');
-      const 극_개수 = new Set(filtered.map(r => {
-        for (const pair of Object.values(showTitleMap)) {
+      function excelDateToStr(excelDate) {
+        if (typeof excelDate === "number") {
+          const date = new Date(Date.UTC(1899, 11, 30) + excelDate * 86400000);
+          return date.toISOString().slice(0, 10);
+        }
+        return excelDate;
+      }
+      function excelTimeToStr(excelTime) {
+        if (typeof excelTime === "number") {
+          let totalMinutes = Math.round(excelTime * 24 * 60);
+          let hours = Math.floor(totalMinutes / 60);
+          let minutes = totalMinutes % 60;
+          return (
+            (hours < 10 ? "0" : "") +
+            hours +
+            ":" +
+            (minutes < 10 ? "0" : "") +
+            minutes
+          );
+        } else if (
+          typeof excelTime === "string" &&
+          excelTime.match(/^\d{1,2}:\d{2}/)
+        ) {
+          return excelTime.slice(0, 5);
+        }
+        return excelTime;
+      }
+      function formatCastDisplay(str) {
+        return str.trim().replace(/ /g, ", ").replace(/_/g, " ");
+      }
+      function highlightText(text, keyword) {
+        if (!keyword) return text;
+        const re = new RegExp(
+          keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+          "gi"
+        );
+        return text.replace(
+          re,
+          (match) => `<span class="highlight">${match}</span>`
+        );
+      }
+      function getDisplayTitle(showName, seatInfo) {
+        for (const [key, pair] of Object.entries(showTitleMap)) {
           if (
-            pair.ko === r[극Idx] ||
-            pair.en === r[극Idx]
+            showName === key ||
+            showName === pair.ko ||
+            showName === pair.en
           ) {
+            if (seatInfo && seatInfo.includes("(")) {
+              return pair.en;
+            }
             return pair.ko;
           }
         }
-        return r[극Idx];
-      })).size;
-      document.getElementById('count-box').innerHTML = `&nbsp;&nbsp;▶ ${극_개수} 극 &nbsp; & &nbsp; ${본_횟수} 회`;
-    }
-
-    function filterData() {
-      const search = document.getElementById('search').value.trim();
-      const selected_col = document.getElementById('selected_col').value;
-      let filtered = data;
-      if (search) {
-        if (!selected_col) {
-          let searchCandidates = null;
-          for (const pair of Object.values(showTitleMap)) {
-            if (
-              pair.ko.toLowerCase() === search.toLowerCase() ||
-              pair.en.toLowerCase() === search.toLowerCase() ||
-              pair.ko.toLowerCase().includes(search.toLowerCase()) ||
-              pair.en.toLowerCase().includes(search.toLowerCase()) ||
-              search.toLowerCase().includes(pair.ko.toLowerCase()) ||
-              search.toLowerCase().includes(pair.en.toLowerCase())
-            ) {
-              searchCandidates = [pair.ko, pair.en].map(v => v.toLowerCase());
-              break;
-            }
-          }
-          const searchIdx = colNames
-            .map((name, idx) => buttonCols.includes(name) ? null : idx)
-            .filter(idx => idx !== null);
-          filtered = data.filter(row => {
-            const rowShow = row[colNames.indexOf('극')] ? String(row[colNames.indexOf('극')]).trim().toLowerCase() : '';
-            if (searchCandidates && searchCandidates.includes(rowShow)) {
-              return true;
-            }
-            return searchIdx.some(idx => String(row[idx] || '').toLowerCase().includes(search.toLowerCase()));
+        return showName;
+      }
+      window.onload = function () {
+        fetch("RawData.xlsx")
+          .then((res) => res.arrayBuffer())
+          .then((dataArr) => {
+            const wb = XLSX.read(dataArr, { type: "array" });
+            const sheet = XLSX.utils.sheet_to_json(
+              wb.Sheets[wb.SheetNames[0]],
+              { header: 1, defval: "" }
+            );
+            const header = sheet[0];
+            const rows = sheet.slice(1);
+            const showIdx = colNames.map((cn) => header.indexOf(cn));
+            data = rows.map((row) => showIdx.map((idx) => row[idx]));
+            const tIdx = colNames.indexOf("시간"),
+              dIdx = colNames.indexOf("날짜");
+            data.forEach((r) => {
+              r[dIdx] = excelDateToStr(r[dIdx]);
+              r[tIdx] = excelTimeToStr(r[tIdx]);
+            });
+            filterData();
+          })
+          .catch((err) => {
+            alert("파일을 불러올 수 없습니다.");
+            console.error(err);
           });
-        } else if (selected_col === '캐슷') {
-          const idx = colNames.indexOf('캐슷');
-          filtered = data.filter(row => (' ' + row[idx] + ' ').toLowerCase().includes(' ' + search.toLowerCase() + ' '));
-        } else if (selected_col === '제작사') {
-          const idx = colNames.indexOf('제작사');
-          filtered = data.filter(row => {
-            const makers = ('┃'+row[idx].replace(/, /g,'┃')+'┃').toLowerCase();
-            return makers.includes('┃'+search.toLowerCase()+'┃');
+      };
+      function renderTable(filtered) {
+        const search = document.getElementById("search").value.trim();
+        const tbody = document.querySelector("#data-table tbody");
+        tbody.innerHTML = "";
+        filtered.forEach((row, rowIdx) => {
+          const tr = document.createElement("tr");
+          row.forEach((cell, idx) => {
+            const col = colNames[idx];
+            const td = document.createElement("td");
+            if (col === "캐슷") td.className = "col-캐슷";
+            if (col === "CB") td.className = "col-CB";
+            if (col === "제작사") td.className = "col-제작사";
+            if (col === "시즌") td.className = "col-시즌";
+            if (col === "장르") td.className = "col-장르";
+            if (col === "시간") td.className = "col-시간";
+            if (col === "캐보") td.className = "col-캐보";
+            if (col === "후기") td.className = "col-후기";
+            if (col === "L1") td.className = "col-L1";
+            if (col === "L2") td.className = "col-L2";
+            if (col === "날짜") td.className = "col-날짜";
+            if (col === "날짜" && isMobile()) {
+              const dateIdx = colNames.indexOf("날짜");
+              const timeIdx = colNames.indexOf("시간");
+              const rawDate = row[dateIdx] || "";
+              const rawTime = row[timeIdx] || "";
+              let yymmdd = "";
+              if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+                yymmdd =
+                  rawDate.slice(2, 4) +
+                  "/" +
+                  rawDate.slice(5, 7) +
+                  "/" +
+                  rawDate.slice(8, 10);
+              } else {
+                yymmdd = rawDate;
+              }
+              td.innerHTML = `<span class="mobile-date-time">${highlightText(
+                yymmdd,
+                search
+              )}<br>${highlightText(rawTime, search)}</span>`;
+            } else if (col === "시간" && isMobile()) {
+              td.style.display = "none";
+            } else if (buttonCols.includes(col)) {
+              const url = (cell || "").trim();
+              if (url && url !== "-") {
+                const a = document.createElement("a");
+                a.href = url;
+                a.target = "_blank";
+                a.className = "icon-link";
+                a.innerHTML = '<i class="fa-solid fa-link"></i>';
+                td.appendChild(a);
+              }
+            } else if (col === "캐슷") {
+              let disp = cell ? formatCastDisplay(String(cell)) : "";
+              td.innerHTML = highlightText(disp, search);
+              td.addEventListener("click", function (e) {
+                e.stopPropagation();
+                tbody
+                  .querySelectorAll("tr")
+                  .forEach((tr2) => tr2.classList.remove("selected-row"));
+                tr.classList.add("selected-row");
+                const castStr = String(cell).trim();
+                const noteObj = castNotesArr.find(
+                  (obj) => obj.cast.trim() === castStr
+                );
+                let modalContent =
+                  noteObj && noteObj.note
+                    ? noteObj.note.replace(/\n/g, "<br>")
+                    : disp;
+                modalContent = boldifyModalColonLines(modalContent);
+                const cbIdx = colNames.indexOf("CB");
+                const imgUrl = row[cbIdx] ? String(row[cbIdx]).trim() : "";
+                let imgHtml = "";
+                if (imgUrl) {
+                  imgHtml = `<img src="${imgUrl}" class="modal-img" style="width:100%;max-width:400px;display:block;margin:0 auto 16px auto;border-radius:8px;">`;
+                }
+                showCastModal(imgHtml + modalContent);
+              });
+            } else if (col === "극") {
+              const seatInfo = row[colNames.indexOf("자n")];
+              const showName = cell;
+              td.innerHTML = highlightText(
+                getDisplayTitle(showName, seatInfo),
+                search
+              );
+            } else {
+              td.innerHTML = highlightText(String(cell ?? ""), search);
+            }
+            if (col !== "캐슷") {
+              td.addEventListener("click", function () {
+                tbody
+                  .querySelectorAll("tr")
+                  .forEach((tr2) => tr2.classList.remove("selected-row"));
+                tr.classList.add("selected-row");
+              });
+            }
+            tr.appendChild(td);
           });
-        } else if (selected_col === '극') {
-          const idx = colNames.indexOf('극');
-          filtered = data.filter(row => {
-            const rowShow = row[idx] ? String(row[idx]).trim() : '';
-            const searchTrim = search.trim();
-            let foundPair = null;
+          tbody.appendChild(tr);
+        });
+      }
+      function showCastModal(content) {
+        document.getElementById("cast-modal-content").innerHTML = content;
+        document.getElementById("cast-modal").style.display = "flex";
+      }
+      function closeModal() {
+        document.getElementById("cast-modal").style.display = "none";
+      }
+      document
+        .getElementById("cast-modal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) closeModal();
+        });
+      function renderCount(filtered) {
+        const 본_횟수 = filtered.length;
+        const 극Idx = colNames.indexOf("극");
+        const 극_개수 = new Set(
+          filtered.map((r) => {
+            for (const pair of Object.values(showTitleMap)) {
+              if (pair.ko === r[극Idx] || pair.en === r[극Idx]) {
+                return pair.ko;
+              }
+            }
+            return r[극Idx];
+          })
+        ).size;
+        document.getElementById(
+          "count-box"
+        ).innerHTML = `&nbsp;&nbsp;▶ ${극_개수} 극 &nbsp; & &nbsp; ${본_횟수} 회`;
+      }
+      function isMobile() {
+        return window.innerWidth <= 600;
+      }
+      function boldifyModalColonLines(html) {
+        return html
+          .split(/<br\s*\/?>|\n/g)
+          .map((line) => {
+            const idx = line.indexOf(":");
+            if (idx > 0) {
+              return `<strong>${line.slice(0, idx + 1)}</strong>${line.slice(
+                idx + 1
+              )}`;
+            }
+            return line;
+          })
+          .join("<br>");
+      }
+      function filterData() {
+        const search = document.getElementById("search").value.trim();
+        const selected_col = document.getElementById("selected_col").value;
+        let filtered = data;
+        if (search) {
+          if (!selected_col) {
+            const cbIdx = colNames.indexOf("CB");
+            let searchCandidates = null;
             for (const pair of Object.values(showTitleMap)) {
               if (
-                pair.ko.toLowerCase() === searchTrim.toLowerCase() ||
-                pair.en.toLowerCase() === searchTrim.toLowerCase()
+                pair.ko.toLowerCase() === search.toLowerCase() ||
+                pair.en.toLowerCase() === search.toLowerCase() ||
+                pair.ko.toLowerCase().includes(search.toLowerCase()) ||
+                pair.en.toLowerCase().includes(search.toLowerCase()) ||
+                search.toLowerCase().includes(pair.ko.toLowerCase()) ||
+                search.toLowerCase().includes(pair.en.toLowerCase())
               ) {
-                foundPair = [pair.ko, pair.en];
+                searchCandidates = [pair.ko, pair.en].map((v) =>
+                  v.toLowerCase()
+                );
                 break;
               }
             }
-            if (foundPair) {
-              return foundPair.some(title => title === rowShow || title.toLowerCase() === rowShow.toLowerCase());
-            } else {
-              return rowShow.toLowerCase() === searchTrim.toLowerCase();
-            }
-          });
-        } else if (['극장'].includes(selected_col)) {
-          const idx = colNames.indexOf(selected_col);
-          filtered = data.filter(row => String(row[idx]) === search);
-        } else if (buttonCols.includes(selected_col)) {
-          const idx = colNames.indexOf(selected_col);
-          filtered = data.filter(row => ((row[idx] || '').trim()).toLowerCase().includes(search.toLowerCase()));
-        } else {
-          const idx = colNames.indexOf(selected_col);
-          filtered = data.filter(row => String(row[idx]).toLowerCase().includes(search.toLowerCase()));
+            const searchIdx = colNames
+              .map((name, idx) =>
+                buttonCols.includes(name) || name === "CB" ? null : idx
+              )
+              .filter((idx) => idx !== null);
+            filtered = data.filter((row) => {
+              const rowShow = row[colNames.indexOf("극")]
+                ? String(row[colNames.indexOf("극")]).trim().toLowerCase()
+                : "";
+              if (searchCandidates && searchCandidates.includes(rowShow)) {
+                return true;
+              }
+              return searchIdx.some((idx) =>
+                String(row[idx] || "")
+                  .toLowerCase()
+                  .includes(search.toLowerCase())
+              );
+            });
+          } else if (selected_col === "캐슷") {
+            const idx = colNames.indexOf("캐슷");
+            filtered = data.filter((row) =>
+              (" " + row[idx] + " ")
+                .toLowerCase()
+                .includes(" " + search.toLowerCase() + " ")
+            );
+          } else if (selected_col === "제작사") {
+            const idx = colNames.indexOf("제작사");
+            filtered = data.filter((row) => {
+              const makers = (
+                "┃" +
+                row[idx].replace(/, /g, "┃") +
+                "┃"
+              ).toLowerCase();
+              return makers.includes("┃" + search.toLowerCase() + "┃");
+            });
+          } else if (selected_col === "극") {
+            const idx = colNames.indexOf("극");
+            filtered = data.filter((row) => {
+              const rowShow = row[idx] ? String(row[idx]).trim() : "";
+              const searchTrim = search.trim();
+              let foundPair = null;
+              for (const pair of Object.values(showTitleMap)) {
+                if (
+                  pair.ko.toLowerCase() === searchTrim.toLowerCase() ||
+                  pair.en.toLowerCase() === searchTrim.toLowerCase()
+                ) {
+                  foundPair = [pair.ko, pair.en];
+                  break;
+                }
+              }
+              if (foundPair) {
+                return foundPair.some(
+                  (title) =>
+                    title === rowShow ||
+                    title.toLowerCase() === rowShow.toLowerCase()
+                );
+              } else {
+                return rowShow.toLowerCase() === searchTrim.toLowerCase();
+              }
+            });
+          } else if (["극장"].includes(selected_col)) {
+            const idx = colNames.indexOf(selected_col);
+            filtered = data.filter((row) => String(row[idx]) === search);
+          } else if (buttonCols.includes(selected_col)) {
+            const idx = colNames.indexOf(selected_col);
+            filtered = data.filter((row) =>
+              (row[idx] || "")
+                .trim()
+                .toLowerCase()
+                .includes(search.toLowerCase())
+            );
+          } else if (selected_col === "CB") {
+            filtered = [];
+          } else {
+            const idx = colNames.indexOf(selected_col);
+            filtered = data.filter((row) =>
+              String(row[idx]).toLowerCase().includes(search.toLowerCase())
+            );
+          }
         }
+        renderCount(filtered);
+        renderTable(filtered);
       }
-      renderCount(filtered);
-      renderTable(filtered);
-    }
-
-    document.getElementById('search').addEventListener('input', filterData);
-    document.getElementById('selected_col').addEventListener('change', filterData);
-    document.getElementById('search').addEventListener('keydown', e => { if(e.key==='Enter') filterData(); });
-  </script>
-</body>
+      document.getElementById("search").addEventListener("input", filterData);
+      document
+        .getElementById("selected_col")
+        .addEventListener("change", filterData);
+      document.getElementById("search").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") filterData();
+      });
+    </script>
+  </body>
 </html>
