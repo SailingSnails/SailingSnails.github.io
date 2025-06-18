@@ -34,7 +34,7 @@
       body {
         font-weight: 300;
         color: #222;
-        font-size: 1em;
+        font-size: 1.1em;
         background: #f1f4f8;
       }
       .controls {
@@ -72,6 +72,8 @@
         border: 1px solid #e0e0e0;
         padding: 8px 6px;
         text-align: center;
+        word-break: keep-all;
+        line-break: strict;
       }
       th {
         background: #2c3e50;
@@ -104,13 +106,16 @@
         color: #333 !important;
         font-weight: 600;
       }
+      .modal-shortcuts {
+        display: none;
+      }
       #cast-modal {
         display: none;
         position: fixed;
         left: 0;
         top: 0;
-        width: 100vw;
-        height: 100vh;
+        width: 100dvw;
+        height: 100dvh;
         background: rgba(0, 0, 0, 0.3);
         z-index: 9999;
         align-items: center;
@@ -128,7 +133,7 @@
         color: #222;
         box-shadow: 0 6px 32px #0002;
         position: relative;
-        font-size: 1.05em;
+        font-size: 0.95em;
         font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
         font-weight: 300;
         animation: popIn 0.2s;
@@ -139,13 +144,89 @@
         font-weight: 600;
         color: #222;
       }
+      #cast-modal .close-btn {
+        position: sticky;
+        top: 0;
+        right: 0;
+        float: right;
+        margin-top: 0;
+        margin-right: 0;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 2em;
+        font-weight: bold;
+        color: #222;
+        text-shadow: 0 0 2px #e0e0e0, 1px 1px 0 #e0e0e0, -1px -1px 0 #e0e0e0,
+          0 0 4px #e0e0e0;
+        z-index: 10;
+        transition: background 0.2s, color 0.2s;
+      }
+      #cast-modal .close-btn:hover {
+        color: #ff5252;
+      }
+      #data-table,
+      #data-table th,
+      #data-table td {
+        font-size: 0.91em;
+      }
+      @keyframes popIn {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
       @media (max-width: 600px) {
+        .controls {
+          margin-bottom: 32px;
+        }
+        .controls input {
+          width: 210px;
+          margin-left: 10px;
+        }
+        .count-box {
+          margin: 24px 0 18px;
+          font-size: 1.3em;
+          font-weight: 600;
+        }
+        .modal-shortcuts {
+          display: flex;
+          justify-content: center;
+          gap: 10px;
+          margin: 16px 0;
+        }
+        .shortcut-btn {
+          background: #1976D2;
+          color: #fff;
+          border: none;
+          border-radius: 10px;
+          padding: 6px 12px;
+          font-size: 1em;
+          font-weight: 600;
+          text-decoration: none;
+          box-shadow: 0 2px 8px #0001;
+          transition: background 0.2s;
+        }
+        .shortcut-btn:hover {
+          background: #1565C0;
+        }
         #cast-modal .modal-content {
           min-width: 90vw !important;
           max-width: 95vw !important;
           width: 95vw !important;
           box-sizing: border-box;
           font-size: 0.8em;
+        }
+        #cast-modal .close-btn {
+          font-size: 2.5em;
+          color: #222;
+        }
+        body {
+          font-size: 1em;
         }
         th.col-시간,
         td.col-시간,
@@ -168,37 +249,6 @@
         .mobile-date-time {
           line-height: 1.6;
           display: inline-block;
-        }
-      }
-      #cast-modal .close-btn {
-        position: absolute;
-        top: 10px;
-        right: 14px;
-        background: none;
-        border: none;
-        color: #666;
-        font-size: 1.5em;
-        font-weight: bold;
-        cursor: pointer;
-        z-index: 1;
-      }
-      #cast-modal .close-btn:hover {
-        color: #222;
-        background: none;
-      }
-      #data-table,
-      #data-table th,
-      #data-table td {
-        font-size: 0.91em;
-      }
-      @keyframes popIn {
-        from {
-          transform: scale(0.9);
-          opacity: 0;
-        }
-        to {
-          transform: scale(1);
-          opacity: 1;
         }
       }
     </style>
@@ -398,6 +448,8 @@
         tbody.innerHTML = "";
         filtered.forEach((row, rowIdx) => {
           const tr = document.createElement("tr");
+          let castCell = null;
+          let castCellValue = null;
           row.forEach((cell, idx) => {
             const col = colNames[idx];
             const td = document.createElement("td");
@@ -421,9 +473,9 @@
               if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
                 yymmdd =
                   rawDate.slice(2, 4) +
-                  "/" +
+                  "." +
                   rawDate.slice(5, 7) +
-                  "/" +
+                  "." +
                   rawDate.slice(8, 10);
               } else {
                 yymmdd = rawDate;
@@ -445,6 +497,8 @@
                 td.appendChild(a);
               }
             } else if (col === "캐슷") {
+              castCell = td;
+              castCellValue = cell;
               let disp = cell ? formatCastDisplay(String(cell)) : "";
               td.innerHTML = highlightText(disp, search);
               td.addEventListener("click", function (e) {
@@ -468,7 +522,35 @@
                 if (imgUrl) {
                   imgHtml = `<img src="${imgUrl}" class="modal-img" style="width:100%;max-width:400px;display:block;margin:0 auto 16px auto;border-radius:8px;">`;
                 }
-                showCastModal(imgHtml + modalContent);
+                const caboUrl = row[colNames.indexOf("캐보")]?.trim();
+                const reviewUrl = row[colNames.indexOf("후기")]?.trim();
+                const l1Url = row[colNames.indexOf("L1")]?.trim();
+                const l2Url = row[colNames.indexOf("L2")]?.trim();
+                const shortcutsHtml = `
+                  <div class="modal-shortcuts">
+                    ${
+                      caboUrl && caboUrl !== "-"
+                        ? `<a href="${caboUrl}" class="shortcut-btn" target="_blank" rel="noopener">캐보</a>`
+                        : ""
+                    }
+                    ${
+                      reviewUrl && reviewUrl !== "-"
+                        ? `<a href="${reviewUrl}" class="shortcut-btn" target="_blank" rel="noopener">후기</a>`
+                        : ""
+                    }
+                    ${
+                      l1Url && l1Url !== "-"
+                        ? `<a href="${l1Url}" class="shortcut-btn" target="_blank" rel="noopener">L1</a>`
+                        : ""
+                    }
+                    ${
+                      l2Url && l2Url !== "-"
+                        ? `<a href="${l2Url}" class="shortcut-btn" target="_blank" rel="noopener">L2</a>`
+                        : ""
+                    }
+                  </div>
+                `;
+                showCastModal(imgHtml + shortcutsHtml + modalContent);
               });
             } else if (col === "극") {
               const seatInfo = row[colNames.indexOf("자n")];
@@ -490,6 +572,59 @@
             }
             tr.appendChild(td);
           });
+          if (isMobile() && castCell) {
+            tr.addEventListener("click", function (e) {
+              if (e.target === castCell) return;
+              tbody
+                .querySelectorAll("tr")
+                .forEach((tr2) => tr2.classList.remove("selected-row"));
+              tr.classList.add("selected-row");
+              const castStr = String(castCellValue).trim();
+              const noteObj = castNotesArr.find(
+                (obj) => obj.cast.trim() === castStr
+              );
+              let modalContent =
+                noteObj && noteObj.note
+                  ? noteObj.note.replace(/\n/g, "<br>")
+                  : castCellValue;
+              modalContent = boldifyModalColonLines(modalContent);
+              const cbIdx = colNames.indexOf("CB");
+              const imgUrl = row[cbIdx] ? String(row[cbIdx]).trim() : "";
+              let imgHtml = "";
+              if (imgUrl) {
+                imgHtml = `<img src="${imgUrl}" class="modal-img" style="width:100%;max-width:400px;display:block;margin:0 auto 16px auto;border-radius:8px;">`;
+              }
+              const caboUrl = row[colNames.indexOf("캐보")]?.trim();
+              const reviewUrl = row[colNames.indexOf("후기")]?.trim();
+              const l1Url = row[colNames.indexOf("L1")]?.trim();
+              const l2Url = row[colNames.indexOf("L2")]?.trim();
+              const shortcutsHtml = `
+                <div class="modal-shortcuts">
+                  ${
+                    caboUrl && caboUrl !== "-"
+                      ? `<a href="${caboUrl}" class="shortcut-btn" target="_blank" rel="noopener">캐보</a>`
+                      : ""
+                  }
+                  ${
+                    reviewUrl && reviewUrl !== "-"
+                      ? `<a href="${reviewUrl}" class="shortcut-btn" target="_blank" rel="noopener">후기</a>`
+                      : ""
+                  }
+                  ${
+                    l1Url && l1Url !== "-"
+                      ? `<a href="${l1Url}" class="shortcut-btn" target="_blank" rel="noopener">L1</a>`
+                      : ""
+                  }
+                  ${
+                    l2Url && l2Url !== "-"
+                      ? `<a href="${l2Url}" class="shortcut-btn" target="_blank" rel="noopener">L2</a>`
+                      : ""
+                  }
+                </div>
+              `;
+              showCastModal(imgHtml + shortcutsHtml + modalContent);
+            });
+          }
           tbody.appendChild(tr);
         });
       }
@@ -538,6 +673,16 @@
             return line;
           })
           .join("<br>");
+      }
+      function showCastModal(html) {
+        const modal = document.getElementById("cast-modal");
+        document.getElementById("cast-modal-content").innerHTML = html;
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+      function closeModal() {
+        document.getElementById("cast-modal").style.display = "none";
+        document.body.style.overflow = "";
       }
       function filterData() {
         const search = document.getElementById("search").value.trim();
