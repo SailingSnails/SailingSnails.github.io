@@ -146,7 +146,7 @@
         border: none;
         border-radius: 10px;
         padding: 6px 12px;
-        font-size: 1em;
+        font-size: 1.1em;
         font-weight: 600;
         text-decoration: none;
         box-shadow: 0 2px 8px #0001;
@@ -157,9 +157,10 @@
       #cast-modal .modal-content {
         min-width: 90vw;
         max-width: 95vw;
+        max-height: 80vh;
         width: 95vw;
         box-sizing: border-box;
-        font-size: 0.9em;
+        font-size: 1em;
       }
       #cast-modal .close-btn { font-size: 2.5em; color: #222; }
     }
@@ -358,6 +359,14 @@
       `;
     }
 
+    function getGoogleUserContentLink(url) {
+      const match = url.match(/\/file\/d\/([^/]+)\//);
+      if (match) {
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      }
+      return url;
+    }
+
     function renderTable(filtered) {
       const search = document.getElementById("search").value.trim();
       const tbody = document.querySelector("#data-table tbody");
@@ -411,7 +420,10 @@
               let modalContent = noteObj?.note?.replace(/\n/g, "<br>") || disp;
               modalContent = boldifyModalColonLines(modalContent);
               const cbIdx = colNames.indexOf("CB");
-              const imgUrl = row[cbIdx]?.trim();
+              let imgUrl = row[cbIdx]?.trim();
+              if (imgUrl && imgUrl.includes("drive.google.com")) {
+                imgUrl = getGoogleUserContentLink(imgUrl);
+              }
               const imgHtml = imgUrl
                 ? `<img src="${imgUrl}" class="modal-img" style="width:100%;max-width:400px;display:block;margin:0 auto 16px auto;border-radius:8px;">`
                 : "";
@@ -442,8 +454,10 @@
             const noteObj = castNotesArr.find(obj => obj.cast.trim() === castStr);
             let modalContent = noteObj?.note?.replace(/\n/g, "<br>") || castCellValue;
             modalContent = boldifyModalColonLines(modalContent);
-            const cbIdx = colNames.indexOf("CB");
-            const imgUrl = row[cbIdx]?.trim();
+            let imgUrl = row[cbIdx]?.trim();
+            if (imgUrl && imgUrl.includes("drive.google.com")) {
+              imgUrl = getGoogleUserContentLink(imgUrl);
+            }
             const imgHtml = imgUrl
               ? `<img src="${imgUrl}" class="modal-img" style="width:100%;max-width:400px;display:block;margin:0 auto 16px auto;border-radius:8px;">`
               : "";
