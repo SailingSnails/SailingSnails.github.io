@@ -11,7 +11,7 @@ st.set_page_config(page_title='검색', layout='wide', initial_sidebar_state='co
 
 # URL
 URL = 'https://github.com/SailingSnails/summary/raw/refs/heads/main/RawData.xlsx'
-font_URL = './fonts/Freesentation-6SemiBold.ttf'
+font_URL = 'https://github.com/SailingSnails/SailingSnails.github.io/raw/main/Freesentation-6SemiBold.ttf'
 
 # Font
 def apply_custom_font(path):
