@@ -44,14 +44,14 @@ cast_URL = {
 alt.themes.enable('dark')
 st.set_page_config(page_title='관극 정산', layout='wide', initial_sidebar_state="collapsed")
 color_presets = {
-    'default': ['#A13E4A', '#C56874', '#E9A8AE'],
+    'default': ['#9258A8', '#BD7CCF', '#D9B3E6'],
     2019: ['#FD6666', '#FEA3A3', '#FFDFDF'],
     2020: ['#4A7FB0', '#5B9BD5', '#ADC6E5'],
     2021: ['#666666', '#888888', '#BABABA'],
     2022: ['#E68AA9', '#FFA0C5', '#FFD1D4'],
     2023: ['#703C3C', '#8E5656', '#C49A9A'],
     2024: ['#228B22', '#5DC35D', '#A4FBA6'],
-    2025: ['#9258A8', '#BD7CCF', '#D9B3E6'],
+    2025: ['#A13E4A', '#C56874', '#E9A8AE'],
 }
 
 

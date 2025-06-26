@@ -185,7 +185,7 @@
       body { font-size: 0.8em; }
       .controls { margin-top: 20px; margin-bottom: 30px; }
       .controls input, .controls select { font-size: 1.2em }
-      .controls input { width: 210px; margin-left: 10px; }
+      .controls input { width: 180px; margin-left: 10px; }
       
       .count-box { margin: 15px 0 15px; font-size: 1.5em; font-weight: 600; }
       
@@ -215,6 +215,59 @@
       bottom: 40px;
     }
     }
+
+    #nightmode-btn {
+      font-size: 1.2em;
+      padding: 6px 9px;
+      border-radius: 12px;
+    }
+
+    body.nightmode {
+      background: #181a1b;
+      color: #e0e0e0;
+    }
+    body.nightmode table {
+      background: #232629;
+      color: #e0e0e0;
+    }
+    body.nightmode th {
+      background: #11171d;
+      color: #fff;
+    }
+    body.nightmode td {
+      border: 1px solid #333;
+      background: #232629;
+      color: #e0e0e0;
+    }
+    body.nightmode .controls input,
+    body.nightmode .controls select {
+      background: #232629;
+      color: #e0e0e0;
+      border: 2px solid #555;
+    }
+    body.nightmode .highlight { background: #ffe066; color: #1a1a1a; font-weight: 600; }
+    body.nightmode mark { background: #ffe066; color: #b71c1c; font-weight: 600; }
+    body.nightmode tr.selected-row td,
+    body.nightmode .selected-row td,
+    body.nightmode .selected-row {
+      background: #4E5968 !important;
+    }
+    body.nightmode #cast-modal .modal-content {
+      background: #232629;
+      color: #e0e0e0;
+    }
+    body.nightmode .shortcut-btn,
+    body.nightmode .to-top-btn,
+    body.nightmode .to-bottom-btn {
+      background: #e6e6e6;
+      color: #444;
+    }
+    body.nightmode .shortcut-btn:hover,
+    body.nightmode .to-top-btn:hover,
+    body.nightmode .to-bottom-btn:hover {
+      background: #888;
+    }
+
   </style>
 </head>
 <body>
@@ -233,6 +286,9 @@
       <option value="극장">극장</option>
       <option value="+">+</option>
     </select>
+    <button id="nightmode-btn" style="margin-left:5px;">
+    <i class="fa-solid fa-moon"></i>
+  </button>
   </div>
   <div id="count-box" class="count-box"></div>
   <table id="data-table">
@@ -306,6 +362,16 @@
     function isMobile() {
       return window.innerWidth <= 600;
     }
+
+    document.getElementById('nightmode-btn').addEventListener('click', function () {
+      document.body.classList.toggle('nightmode');
+      const btn = this;
+      if(document.body.classList.contains('nightmode')) {
+        btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+      }
+    });
 
     function excelDateToStr(excelDate) {
       if (typeof excelDate === "number") {
@@ -631,6 +697,14 @@
     document.getElementById("selected_col").addEventListener("change", filterData);
     document.getElementById("search").addEventListener("keydown", e => {
       if (e.key === "Enter") filterData();
+    });
+    document.addEventListener("keydown", function(e) {
+      if (
+        e.key === "Escape" &&
+        document.getElementById("cast-modal").style.display === "flex"
+      ) {
+        closeModal();
+      }
     });
 
     document.querySelector('.to-top-btn').addEventListener('click', function() {
