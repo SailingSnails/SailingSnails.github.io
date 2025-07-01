@@ -117,6 +117,14 @@
       border-radius: 8px;
       object-fit: contain;
     }
+    .modal-info {
+      font-size: 1.4em;
+      font-weight: bold;
+    }
+    .datetime-line {
+      color: #555;
+      font-size: 0.8em !important;
+    } 
     .modal-shortcuts {
       display: flex;
       justify-content: center;
@@ -124,7 +132,7 @@
       margin: 16px 0;
     }
     .shortcut-btn {
-      background: #2C2C2C;
+      background: #2c3e50;
       color: #fff;
       border: none;
       border-radius: 10px;
@@ -323,6 +331,29 @@
   <button class="to-bottom-btn">▼</button>
 </div>
   <script>
+    window.onload = function () {
+      fetch("cast_notes.json")
+      .then(res => res.json())
+      .then(json => castNotesArr = json);
+      
+      fetch("RawData.xlsx")
+        .then(res => res.arrayBuffer())
+        .then(dataArr => {
+          const wb = XLSX.read(dataArr, { type: "array" });
+          const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
+          const header = sheet[0], rows = sheet.slice(1);
+          const showIdx = colNames.map(cn => header.indexOf(cn));
+          data = rows.map(row => showIdx.map(idx => row[idx]));
+          const tIdx = colNames.indexOf("시간"), dIdx = colNames.indexOf("날짜");
+          data.forEach(r => {
+            r[dIdx] = excelDateToStr(r[dIdx]);
+            r[tIdx] = excelTimeToStr(r[tIdx]);
+          });
+          filterData();
+        })
+        .catch(err => { alert("파일을 불러올 수 없습니다."); console.error(err); });
+    };
+
     const showTitleMap = {
         스위니: { ko: "스위니 토드", en: "Sweeney Todd" },
         매다리: { ko: "매디슨 카운티의 다리", en: "The Bridges of Madison County" },
@@ -402,20 +433,123 @@
       return excelTime;
     }
 
-    function formatCastDisplay(str) {
-      return str.trim().replace(/ /g, ", ").replace(/_/g, " ");
+  
+    //Modal
+    function openModal(content) {
+      document.getElementById("cast-modal-content").innerHTML = content;
+      document.getElementById("cast-modal").style.display = "flex";
+      document.body.style.overflow = "hidden";
     }
 
-    function highlightText(text, keyword) {
+
+    function getGoogleUserContentLink(url) {
+      const match = url.match(/\/file\/d\/([^/]+)\//);
+      if (match) {
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      }
+      return url;
+    }
+
+
+    function makeModalInfo(row) {
+      const date = row[0]; 
+      const time = row[1];
+      const season = row[3];
+      const genre = row[4];
+      const show = getDisplayTitle(row[5], row[6]);
+      const nth = row[6];
+
+      let dateStr = date;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        const y = date.slice(0, 4);
+        const m = String(Number(date.slice(5, 7)));
+        const d = String(Number(date.slice(8, 10)));
+        dateStr = `${y}년 ${m}월 ${d}일`;
+      }
+
+      let timeStr = time;
+      if (/^\d{1,2}:\d{2}/.test(time)) {
+        const [h, min] = time.split(":");
+        timeStr = `${h.padStart(2, "0")}시 ${min.padStart(2, "0")}분`;
+      }
+
+      const seasonPart = season ? season.slice(3, 13) : "";
+
+      let genrePart = "";
+      if (genre && genre.includes("중계")) {
+        genrePart = "중계";
+      } else if (genre && genre.includes("DVD")) {
+        genrePart = "DVD";
+      }
+
+      const genreSpace = genrePart ? " " : "";
+
+
+      return `<div class="modal-info">
+        <div class="datetime-line">
+          ${dateStr}&nbsp;&nbsp;/&nbsp;&nbsp;${timeStr}
+        </div>
+        <div>
+          ${show} (${seasonPart}${genreSpace}${genrePart})
+        </div>
+        <div class="datetime-line">${nth}</div>
+      </div>`;
+
+    }
+
+
+    function makeShortcutsHtml(row) {
+      const getUrl = col => {
+        const url = row[colNames.indexOf(col)]?.trim();
+        return url && url !== "-" ? url : null;
+      };
+      return `
+        <div class="modal-shortcuts">
+          ${getUrl("캐보") ? `<a href="${getUrl("캐보")}" class="shortcut-btn" target="_blank" rel="noopener">캐슷보드</a>` : ''}
+          ${getUrl("후기") ? `<a href="${getUrl("후기")}" class="shortcut-btn" target="_blank" rel="noopener">후기</a>` : ''}
+          ${getUrl("L1") ? `<a href="${getUrl("L1")}" class="shortcut-btn" target="_blank" rel="noopener">링크</a>` : ''}
+          ${getUrl("L2") ? `<a href="${getUrl("L2")}" class="shortcut-btn" target="_blank" rel="noopener">링크2</a>` : ''}
+        </div>
+      `;
+    }
+
+
+    function boldifyModalColonLines(html) {
+      return html
+        .split(/<br\s*\/?>|\n/g)
+        .map((line) => {
+          const idx = line.indexOf(":");
+          if (idx > 0) {
+            return `<strong>${line.slice(0, idx + 1)}</strong>${line.slice(
+              idx + 1
+            )}`;
+          }
+          return line;
+        })
+        .join("<br>");
+    }
+
+    function highlightModalKeyword(text, keyword) {
       if (!keyword) return text;
-      const re = new RegExp(
-        keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-        "gi"
-      );
-      return text.replace(
-        re,
-        (match) => `<span class="highlight">${match}</span>`
-      );
+      const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'gi');
+      return text.replace(regex, match => `<mark>${match}</mark>`);
+    }
+
+    
+    function closeModal() {
+      document.getElementById("cast-modal").style.display = "none";
+      document.body.style.overflow = "";
+    }
+
+    document.getElementById("cast-modal").addEventListener("click", function (e) {
+      if (e.target === this) closeModal();
+    });
+
+
+    //Table
+    function formatCastDisplay(str) {
+      return str.trim().replace(/ /g, ", ").replace(/_/g, " ");
     }
 
     function getDisplayTitle(showName, nth) {
@@ -434,66 +568,16 @@
       return showName;
     }
 
-    function boldifyModalColonLines(html) {
-      return html
-        .split(/<br\s*\/?>|\n/g)
-        .map((line) => {
-          const idx = line.indexOf(":");
-          if (idx > 0) {
-            return `<strong>${line.slice(0, idx + 1)}</strong>${line.slice(
-              idx + 1
-            )}`;
-          }
-          return line;
-        })
-        .join("<br>");
-    }
-
-    function showCastModal(content) {
-      document.getElementById("cast-modal-content").innerHTML = content;
-      document.getElementById("cast-modal").style.display = "flex";
-      document.body.style.overflow = "hidden";
-    }
-
-    document
-      .getElementById("cast-modal")
-      .addEventListener("click", function (e) {
-        if (e.target === this) closeModal();
-      });
-
-    function closeModal() {
-      document.getElementById("cast-modal").style.display = "none";
-      document.body.style.overflow = "";
-    }
-
-    function makeShortcutsHtml(row) {
-      const getUrl = col => {
-        const url = row[colNames.indexOf(col)]?.trim();
-        return url && url !== "-" ? url : null;
-      };
-      return `
-        <div class="modal-shortcuts">
-          ${getUrl("캐보") ? `<a href="${getUrl("캐보")}" class="shortcut-btn" target="_blank" rel="noopener">캐슷보드</a>` : ''}
-          ${getUrl("후기") ? `<a href="${getUrl("후기")}" class="shortcut-btn" target="_blank" rel="noopener">후기</a>` : ''}
-          ${getUrl("L1") ? `<a href="${getUrl("L1")}" class="shortcut-btn" target="_blank" rel="noopener">링크</a>` : ''}
-          ${getUrl("L2") ? `<a href="${getUrl("L2")}" class="shortcut-btn" target="_blank" rel="noopener">링크2</a>` : ''}
-        </div>
-      `;
-    }
-
-    function getGoogleUserContentLink(url) {
-      const match = url.match(/\/file\/d\/([^/]+)\//);
-      if (match) {
-        return `https://lh3.googleusercontent.com/d/${match[1]}`;
-      }
-      return url;
-    }
-
-      function highlightModalKeyword(text, keyword) {
+    function highlightText(text, keyword) {
       if (!keyword) return text;
-      const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(escaped, 'gi');
-      return text.replace(regex, match => `<mark>${match}</mark>`);
+      const re = new RegExp(
+        keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        "gi"
+      );
+      return text.replace(
+        re,
+        (match) => `<span class="highlight">${match}</span>`
+      );
     }
 
     function renderTable(filtered) {
@@ -543,14 +627,11 @@
           tr.appendChild(td);
         });
 
+
         tr.addEventListener("click", function (e) {
           tbody.querySelectorAll("tr").forEach(tr2 => tr2.classList.remove("selected-row"));
           tr.classList.add("selected-row");
-          const castStr = String(castCellValue).trim();
-          const noteObj = castNotesArr.find(obj => obj.cast.trim() === castStr);
-          let modalContent = noteObj?.note?.replace(/\n/g, "<br>") || disp || castCellValue;
-          modalContent = highlightModalKeyword(modalContent, window.lastSearchKeyword);
-          modalContent = boldifyModalColonLines(modalContent);
+          
           const cbIdx = colNames.indexOf("CB");
           let imgUrl = row[cbIdx]?.trim();
           if (imgUrl && imgUrl.includes("drive.google.com")) {
@@ -559,34 +640,18 @@
           const imgHtml = imgUrl
             ? `<img src="${imgUrl}" class="modal-img">`
             : "";
-          showCastModal(imgHtml + makeShortcutsHtml(row) + modalContent);
+        
+          const castStr = String(castCellValue).trim();
+          const noteObj = castNotesArr.find(obj => obj.cast.trim() === castStr);
+          let modalContent = noteObj?.note?.replace(/\n/g, "<br>") || disp || castCellValue;
+          modalContent = boldifyModalColonLines(modalContent);
+          modalContent = highlightModalKeyword(modalContent, window.lastSearchKeyword);
+          
+          openModal(imgHtml + makeModalInfo(row) + makeShortcutsHtml(row) + modalContent);
         });
         tbody.appendChild(tr);
       });
     }
-
-    window.onload = function () {
-      fetch("cast_notes.json")
-      .then(res => res.json())
-      .then(json => castNotesArr = json);
-      
-      fetch("RawData.xlsx")
-        .then(res => res.arrayBuffer())
-        .then(dataArr => {
-          const wb = XLSX.read(dataArr, { type: "array" });
-          const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
-          const header = sheet[0], rows = sheet.slice(1);
-          const showIdx = colNames.map(cn => header.indexOf(cn));
-          data = rows.map(row => showIdx.map(idx => row[idx]));
-          const tIdx = colNames.indexOf("시간"), dIdx = colNames.indexOf("날짜");
-          data.forEach(r => {
-            r[dIdx] = excelDateToStr(r[dIdx]);
-            r[tIdx] = excelTimeToStr(r[tIdx]);
-          });
-          filterData();
-        })
-        .catch(err => { alert("파일을 불러올 수 없습니다."); console.error(err); });
-    };
 
     function toKoShowName(showName, showTitleMap) {
       for (const { ko, en } of Object.values(showTitleMap)) {
@@ -706,6 +771,7 @@
         closeModal();
       }
     });
+
 
     document.querySelector('.to-top-btn').addEventListener('click', function() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
