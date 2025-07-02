@@ -73,6 +73,12 @@
       to { transform: scale(1); opacity: 1; }
     }
 
+    body.modal-open {
+      position: fixed;
+      width: 100dvw;
+      overflow: hidden !important;
+      touch-action: none;
+    }
     #cast-modal {
       display: none;
       position: fixed;
@@ -114,17 +120,20 @@
       max-height: 450px;
       display: block;
       margin: 0 auto 16px auto;
-      border-radius: 8px;
       object-fit: contain;
     }
     .modal-info {
       font-size: 1.4em;
       font-weight: bold;
     }
+    .title-line {
+      background-color: #fff9c4;
+      padding: 0.1em 0.2em;
+    }
     .datetime-line {
-      color: #555;
+      color: #919394;
       font-size: 0.8em !important;
-    } 
+    }
     .modal-shortcuts {
       display: flex;
       justify-content: center;
@@ -137,13 +146,19 @@
       border: none;
       border-radius: 10px;
       padding: 6px 12px;
-      font-size: 1em;
+      font-size: 0.93em;
       font-weight: 600;
       text-decoration: none;
       box-shadow: 0 2px 8px #0001;
       transition: background 0.2s;
     }
     .shortcut-btn:hover { background: #444444; }
+    .modal-footer {
+      margin-top:40px;
+      font-size:0.8em;
+      color:#888;
+      font-weight:300;
+    }
     #cast-modal .close-btn {
       position: absolute;
       top: 10px; right: 10px;
@@ -200,6 +215,7 @@
       th.col-시간, td.col-시간, 
       th.col-제작사, td.col-제작사,
       th.col-시즌, td.col-시즌, 
+      th.col-자n, td.col-자n, 
       th.col-장르, td.col-장르 { display: none !important; }
       .mobile-date-time { line-height: 1.6; display: inline-block; }
 
@@ -264,6 +280,9 @@
       background: #232629;
       color: #e0e0e0;
     }
+    body.nightmode .title-line {
+      background-color: #4E5968;
+    }
     body.nightmode .shortcut-btn,
     body.nightmode .to-top-btn,
     body.nightmode .to-bottom-btn {
@@ -308,7 +327,7 @@
         <th class="col-시즌">시즌</th>
         <th class="col-장르">장르</th>
         <th>극</th>
-        <th>자n</th>
+        <th class="col-자n">자n</th>
         <th class="col-캐슷">캐슷</th>
         <th>극장</th>
         <th class="col-캐보">캐보</th>
@@ -451,6 +470,23 @@
     }
 
 
+    function getTimezoneAbbr(dateStr) {
+      const d = new Date(dateStr);
+      const ts = d.getTime();
+
+      const inRange = (start, end) =>
+        ts >= new Date(start).getTime() && ts <= new Date(end).getTime();
+
+      if (inRange('2023-11-20', '2023-11-23')) return 'GMT';
+      if (inRange('2024-03-01', '2024-03-03')) return 'GMT';
+
+      if (inRange('2023-08-26', '2023-11-04')) return 'EDT';
+      if (inRange('2023-11-05', '2024-03-09')) return 'EST';
+      if (inRange('2024-03-10', '2024-05-11')) return 'EDT';
+
+      return '';
+    }
+
     function makeModalInfo(row) {
       const date = row[0]; 
       const time = row[1];
@@ -460,17 +496,27 @@
       const nth = row[6];
 
       let dateStr = date;
+      let dayStr = "";
+
       if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         const y = date.slice(0, 4);
         const m = String(Number(date.slice(5, 7)));
         const d = String(Number(date.slice(8, 10)));
-        dateStr = `${y}년 ${m}월 ${d}일`;
+        const dateObj = new Date(date);
+        const days = ["일", "월", "화", "수", "목", "금", "토"];
+        dayStr = days[dateObj.getDay()];
+        dateStr = `${y}년 ${m}월 ${d}일 (${dayStr})`;
       }
 
       let timeStr = time;
       if (/^\d{1,2}:\d{2}/.test(time)) {
         const [h, min] = time.split(":");
         timeStr = `${h.padStart(2, "0")}시 ${min.padStart(2, "0")}분`;
+      }
+
+      const tzAbbr = getTimezoneAbbr(date);
+      if (tzAbbr) {
+        timeStr += ` ${tzAbbr}`;
       }
 
       const seasonPart = season ? season.slice(3, 13) : "";
@@ -484,17 +530,42 @@
 
       const genreSpace = genrePart ? " " : "";
 
-
       return `<div class="modal-info">
         <div class="datetime-line">
           ${dateStr}&nbsp;&nbsp;/&nbsp;&nbsp;${timeStr}
         </div>
         <div>
-          ${show} (${seasonPart}${genreSpace}${genrePart})
+          <span class="title-line">${show} (${seasonPart}${genreSpace}${genrePart})</span>
         </div>
-        <div class="datetime-line">${nth}</div>
+        <div class="datetime-line">
+          ${nth}
+        </div>
       </div>`;
+    }
 
+    function getGenreShort(genre) {
+      if (!genre) return '';
+      if (genre.startsWith('연극 ')) return '연극';
+      if (genre.startsWith('뮤지컬')) return '뮤지컬';
+      if (genre.startsWith('기타 ')) return '기타';
+      return genre;
+    }
+
+    function renameTheater(theater) {
+      if (!theater) return '';
+      if (theater === '-') return '(집관)';
+      return theater;
+    }
+
+    function makeModalFooter(row) {
+      const genre = getGenreShort(row[colNames.indexOf('장르')]);
+      const company = row[colNames.indexOf('제작사')] || '';
+      const theater = renameTheater(row[colNames.indexOf('극장')]);
+      return `
+        <div class="modal-footer">
+          ${genre}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${company}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${theater}
+        </div>
+      `;
     }
 
 
@@ -507,8 +578,8 @@
         <div class="modal-shortcuts">
           ${getUrl("캐보") ? `<a href="${getUrl("캐보")}" class="shortcut-btn" target="_blank" rel="noopener">캐슷보드</a>` : ''}
           ${getUrl("후기") ? `<a href="${getUrl("후기")}" class="shortcut-btn" target="_blank" rel="noopener">후기</a>` : ''}
-          ${getUrl("L1") ? `<a href="${getUrl("L1")}" class="shortcut-btn" target="_blank" rel="noopener">링크</a>` : ''}
-          ${getUrl("L2") ? `<a href="${getUrl("L2")}" class="shortcut-btn" target="_blank" rel="noopener">링크2</a>` : ''}
+          ${getUrl("L1") ? `<a href="${getUrl("L1")}" class="shortcut-btn" target="_blank" rel="noopener">L1</a>` : ''}
+          ${getUrl("L2") ? `<a href="${getUrl("L2")}" class="shortcut-btn" target="_blank" rel="noopener">L2</a>` : ''}
         </div>
       `;
     }
@@ -597,7 +668,7 @@
             "캐슷": "col-캐슷", "CB": "col-CB", "제작사": "col-제작사",
             "시즌": "col-시즌", "장르": "col-장르", "시간": "col-시간",
             "캐보": "col-캐보", "후기": "col-후기", "L1": "col-L1",
-            "L2": "col-L2", "날짜": "col-날짜"
+            "L2": "col-L2", "날짜": "col-날짜", "자n": 'col-자n'
           }[col];
           if (colClass) td.className = colClass;
 
@@ -647,7 +718,7 @@
           modalContent = boldifyModalColonLines(modalContent);
           modalContent = highlightModalKeyword(modalContent, window.lastSearchKeyword);
           
-          openModal(imgHtml + makeModalInfo(row) + makeShortcutsHtml(row) + modalContent);
+          openModal(imgHtml + makeModalInfo(row) + makeShortcutsHtml(row) + modalContent + makeModalFooter(row));
         });
         tbody.appendChild(tr);
       });
