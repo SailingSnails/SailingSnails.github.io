@@ -73,12 +73,6 @@
       to { transform: scale(1); opacity: 1; }
     }
 
-    body.modal-open {
-      position: fixed;
-      width: 100dvw;
-      overflow: hidden !important;
-      touch-action: none;
-    }
     #cast-modal {
       display: none;
       position: fixed;
@@ -205,6 +199,9 @@
     }
 
     @media (max-width: 600px) {
+      .controls input, .controls select {
+        font-size: 16px !important;
+      }
       body { font-size: 0.8em; }
       .controls { margin-top: 20px; margin-bottom: 30px; }
       .controls input, .controls select { font-size: 1.2em }
