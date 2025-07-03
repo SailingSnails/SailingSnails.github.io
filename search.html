@@ -59,10 +59,11 @@
       cursor: pointer;
     }
     th.col-CB, td.col-CB,
-    th.col-캐보, td.col-캐보,
-    th.col-후기, td.col-후기, 
+    th.col-캐보, td.col-캐보, 
+    th.col-후기, td.col-후기,
     th.col-L1, td.col-L1,
-    th.col-L2, td.col-L2 { display: none; }
+    th.col-L2, td.col-L2,
+    th.col-RV, td.col-RV { display: none; }
     .col-캐슷 { text-align: left !important; }
     .highlight { background: #ffe066; font-weight: 600; }
     mark { background: #ffe066; color: #b71c1c; font-weight: 600; }
@@ -120,13 +121,12 @@
       font-size: 1.4em;
       font-weight: bold;
     }
-    .title-line {
-      background-color: #fff9c4;
-      padding: 0.1em 0.2em;
-    }
     .datetime-line {
       color: #919394;
       font-size: 0.8em !important;
+    }
+    .star-rating{
+      color: #fff
     }
     .modal-shortcuts {
       display: flex;
@@ -148,7 +148,7 @@
     }
     .shortcut-btn:hover { background: #444444; }
     .modal-footer {
-      margin-top:40px;
+      margin-top:30px;
       font-size:0.8em;
       color:#888;
       font-weight:300;
@@ -275,16 +275,16 @@
     }
     body.nightmode #cast-modal .modal-content {
       background: #232629;
-      color: #e0e0e0;
+      color: #d4d3d3;
     }
-    body.nightmode .title-line {
-      background-color: #4E5968;
+    body.nightmode .star-rating{
+      color: #232629
     }
     body.nightmode .shortcut-btn,
     body.nightmode .to-top-btn,
     body.nightmode .to-bottom-btn {
-      background: #e6e6e6;
-      color: #444;
+      background: #d9d6d6;
+      color: #222;
     }
     body.nightmode .shortcut-btn:hover,
     body.nightmode .to-top-btn:hover,
@@ -332,6 +332,7 @@
         <th class="col-L1">L1</th>
         <th class="col-L2">L2</th>
         <th class="col-CB">CB</th>
+        <th class="col-RV">RV</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -400,7 +401,7 @@
         개츠비: { ko: "위대한 개츠비", en: "The Great Gatsby" },
       };
     const colNames = [
-      "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB"
+      "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "RV"
     ];
     const buttonCols = ["캐보", "후기", "L1", "L2"];
     let data = [];
@@ -482,6 +483,18 @@
       if (inRange('2024-03-10', '2024-05-11')) return 'EDT';
 
       return '';
+    }
+
+    function getRatingStars(row) {
+      const review = (row[colNames.indexOf("RV")] || "").trim();
+      let stars = 0;
+      if (review === "극호") stars = 5;
+      else if (review === "호") stars = 4;
+      else if (review === "평타") stars = 3;
+      else if (review === "불호") stars = 2;
+      else if (review === "극불") stars = 1;
+      if (stars === 0) return '';
+      return `<div class="star-rating">${"★".repeat(stars)}${"☆".repeat(5-stars)}</div>`;
     }
 
     function makeModalInfo(row) {
@@ -665,7 +678,7 @@
             "캐슷": "col-캐슷", "CB": "col-CB", "제작사": "col-제작사",
             "시즌": "col-시즌", "장르": "col-장르", "시간": "col-시간",
             "캐보": "col-캐보", "후기": "col-후기", "L1": "col-L1",
-            "L2": "col-L2", "날짜": "col-날짜", "자n": 'col-자n'
+            "L2": "col-L2", "날짜": "col-날짜", "자n": 'col-자n', "RV": "col-RV"
           }[col];
           if (colClass) td.className = colClass;
 
@@ -715,7 +728,15 @@
           modalContent = boldifyModalColonLines(modalContent);
           modalContent = highlightModalKeyword(modalContent, window.lastSearchKeyword);
           
-          openModal(imgHtml + makeModalInfo(row) + makeShortcutsHtml(row) + modalContent + makeModalFooter(row));
+          openModal(
+            imgHtml 
+            + makeModalInfo(row) 
+            + makeShortcutsHtml(row) 
+            + modalContent 
+            + getRatingStars(row) 
+            + makeModalFooter(row)
+          );
+          
         });
         tbody.appendChild(tr);
       });
