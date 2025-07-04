@@ -308,6 +308,7 @@
       <option value="자n">자n</option>
       <option value="캐슷">캐슷</option>
       <option value="극장">극장</option>
+      <option value="후기">후기</option>
       <option value="+">+</option>
     </select>
     <button id="nightmode-btn" style="margin-left:5px;">
@@ -788,7 +789,7 @@
         if (!selected_col) {
           const searchCandidates = getShowTitleCandidates(search, showTitleMap);
           const searchIdx = colNames
-            .map((name, idx) => (!buttonCols.includes(name) && name !== "CB" ? idx : null))
+            .map((name, idx) => (!buttonCols.includes(name) && name !== "CB" && name !== "RV" ? idx : null))
             .filter(idx => idx !== null);
           filtered = data.filter(row => {
             const rowShow = String(row[colNames.indexOf("극")] ?? "").trim().toLowerCase();
@@ -837,12 +838,27 @@
           filtered = data.filter(row =>
             (" " + row[idx] + " ").toLowerCase().includes(" " + searchLower + " ")
           );
+        } else if (selected_col === "후기") {
+          const idx = colNames.indexOf("RV");
+          let targetText = "";
+          if (search === "AMA") targetText = "극호";
+          else if (search === "POS") targetText = "호";
+          else if (search === "SOS") targetText = "평타";
+          else if (search === "NEG") targetText = "불호";
+          else if (search === "TER") targetText = "극불";
+          if (targetText) {
+            filtered = data.filter(row =>
+              String(row[idx] ?? "").trim() === targetText
+            );
+          } else {
+            filtered = [];
+          }
         } else {
           const idx = colNames.indexOf(selected_col);
           filtered = data.filter(row =>
             String(row[idx]).toLowerCase().includes(searchLower)
           );
-        }
+        } 
       }
       renderCount(filtered);
       renderTable(filtered);
