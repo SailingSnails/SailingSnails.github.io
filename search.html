@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>검색</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    @font-face { font-family: "Freesentation"; src: url("./Freesentation-3Light.ttf") format("truetype");
+      font-weight: 300;
+    }
+    @font-face { font-family: "Freesentation"; src: url("./Freesentation-6SemiBold.ttf") format("truetype");
+      font-weight: 600;
+    }
+    body, input, select, table, th, td { font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif; }
+    body {
+      font-weight: 300;
+      color: #222;
+      font-size: 0.95em;
+      background: #f1f4f8;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 24px;
+      margin-bottom: 40px;
+    }
+    .controls input, .controls select {
+      background: #fff;
+      color: #222;
+      border: 2px solid #222;
+      border-radius: 5px;
+      padding: 8px;
+      font-size: 1.25em;
+    }
+    .controls input { width: 320px; margin-left: 12px; }
+    
+    .count-box { margin: 24px 0 18px; font-size: 1.8em; font-weight: 600; }
+    
+    table {
+      border-collapse: collapse;
+      background: #fff;
+      width: 100%;
+      word-break: keep-all;
+      line-break: strict;
+    }
+    th {
+      background: #2c3e50;
+      padding: 10px 6px;
+      color: #fff;
+    }
+    td {
+      border: 1px solid #e0e0e0;
+      padding: 8px 6px;
+      text-align: center;
+      cursor: pointer;
+    }
+    th.col-CB, td.col-CB,
+    th.col-캐보, td.col-캐보, 
+    th.col-후기, td.col-후기,
+    th.col-L1, td.col-L1,
+    th.col-L2, td.col-L2,
+    th.col-RV, td.col-RV { display: none; }
+    .col-캐슷 { text-align: left !important; }
+    .highlight { background: #ffe066; font-weight: 600; }
+    mark { background: #ffe066; color: #b71c1c; font-weight: 600; }
+    .selected-row { background: #fef3c7 !important; font-weight: 600; }
+    
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    #cast-modal {
+      display: none;
+      position: fixed;
+      left: 0; top: 0;
+      width: 100dvw;
+      height: 100dvh;
+      background: rgba(0,0,0,0.3);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      word-break: keep-all;
+      line-break: strict;
+    }
+    #cast-modal .modal-content {
+      background: #fff;
+      text-align: center;
+      border-radius: 10px;
+      padding: 28px 20px;
+      min-width: 300px;
+      max-width: 600px;
+      max-height: 80vh;
+      line-height: 1.5;
+      color: #222;
+      box-shadow: 0 6px 32px #0002;
+      position: relative;
+      font-size: 1.1em;
+      font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
+      font-weight: 300;
+      animation: popIn 0.2s;
+      overflow-y: auto;
+    }
+    #cast-modal .modal-content strong {
+      font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
+      font-weight: 600;
+    }
+    .modal-img {
+      width: 100%;
+      max-width: 500px;
+      max-height: 450px;
+      display: block;
+      margin: 0 auto 16px auto;
+      object-fit: contain;
+    }
+    .modal-info {
+      font-size: 1.4em;
+      font-weight: bold;
+    }
+    .datetime-line {
+      color: #919394;
+      font-size: 0.8em !important;
+    }
+    .star-rating{
+      color: #fff
+    }
+    .modal-shortcuts {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .shortcut-btn {
+      background: #2c3e50;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 0.93em;
+      font-weight: 600;
+      text-decoration: none;
+      box-shadow: 0 2px 8px #0001;
+      transition: background 0.2s;
+    }
+    .shortcut-btn:hover { background: #444444; }
+    .modal-footer {
+      margin-top:30px;
+      font-size:0.8em;
+      color:#888;
+      font-weight:300;
+    }
+    #cast-modal .close-btn {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: none; border: none; cursor: pointer;
+      font-size: 2em; font-weight: bold; color: #222;
+      text-shadow: 0 0 2px #e0e0e0, 1px 1px 0 #e0e0e0, -1px -1px 0 #e0e0e0, 0 0 4px #e0e0e0;
+      z-index: 10;
+      transition: background 0.2s, color 0.2s;
+    }
+    #cast-modal .close-btn:hover { color: #ff5252; }
+    
+    .scroll-buttons {
+      position: fixed;
+      right: 30px;
+      bottom: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 9998;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .scroll-buttons.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .to-top-btn,
+    .to-bottom-btn {
+      opacity: 0.7;
+      background: #2C2C2C;
+      color: #fff;
+      border: none;
+      border-radius: 100px;
+      padding: 20px 25px;
+      font-weight: 600;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .to-top-btn:hover,
+    .to-bottom-btn:hover {
+      background: #444444;
+    }
+
+    @media (max-width: 600px) {
+      .controls input, .controls select {
+        font-size: 16px !important;
+      }
+      body { font-size: 0.8em; }
+      .controls { margin-top: 20px; margin-bottom: 30px; }
+      .controls input, .controls select { font-size: 1.2em }
+      .controls input { width: 180px; margin-left: 10px; }
+      
+      .count-box { margin: 15px 0 15px; font-size: 1.5em; font-weight: 600; }
+      
+      th.col-시간, td.col-시간, 
+      th.col-제작사, td.col-제작사,
+      th.col-시즌, td.col-시즌, 
+      th.col-자n, td.col-자n, 
+      th.col-장르, td.col-장르 { display: none !important; }
+      .mobile-date-time { line-height: 1.6; display: inline-block; }
+
+      #cast-modal .modal-content {
+        max-width: 95vw;
+        max-height: 80vh;
+        width: 95vw;
+        box-sizing: border-box;
+        font-size: 1em;
+      }
+      .modal-img {
+        max-height: 60vh;
+      }
+      .shortcut-btn {
+        font-size: 1.1em;
+      }
+      #cast-modal .close-btn { font-size: 2.5em; color: #222; }
+
+      .scroll-buttons {
+      right: 23px;
+      bottom: 40px;
+    }
+    }
+
+    #nightmode-btn {
+      font-size: 1.2em;
+      padding: 6px 9px;
+      border-radius: 12px;
+    }
+
+    body.nightmode {
+      background: #181a1b;
+      color: #e0e0e0;
+    }
+    body.nightmode table {
+      background: #232629;
+      color: #e0e0e0;
+    }
+    body.nightmode th {
+      background: #11171d;
+      color: #fff;
+    }
+    body.nightmode td {
+      border: 1px solid #333;
+      background: #232629;
+      color: #e0e0e0;
+    }
+    body.nightmode .controls input,
+    body.nightmode .controls select {
+      background: #232629;
+      color: #e0e0e0;
+      border: 2px solid #555;
+    }
+    body.nightmode .highlight { background: #ffe066; color: #1a1a1a; font-weight: 600; }
+    body.nightmode mark { background: #ffe066; color: #b71c1c; font-weight: 600; }
+    body.nightmode tr.selected-row td,
+    body.nightmode .selected-row td,
+    body.nightmode .selected-row {
+      background: #4E5968 !important;
+    }
+    body.nightmode #cast-modal .modal-content {
+      background: #232629;
+      color: #d4d3d3;
+    }
+    body.nightmode .star-rating{
+      color: #232629
+    }
+    body.nightmode .shortcut-btn,
+    body.nightmode .to-top-btn,
+    body.nightmode .to-bottom-btn {
+      background: #d9d6d6;
+      color: #222;
+    }
+    body.nightmode .shortcut-btn:hover,
+    body.nightmode .to-top-btn:hover,
+    body.nightmode .to-bottom-btn:hover {
+      background: #888;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <input type="text" id="search" placeholder="검색어 입력" />
+    <select id="selected_col">
+      <option value="">전체</option>
+      <option value="날짜">날짜</option>
+      <option value="시간">시간</option>
+      <option value="제작사">제작사</option>
+      <option value="시즌">시즌</option>
+      <option value="장르">장르</option>
+      <option value="극">극</option>
+      <option value="자n">자n</option>
+      <option value="캐슷">캐슷</option>
+      <option value="극장">극장</option>
+      <option value="후기">후기</option>
+      <option value="+">+</option>
+    </select>
+    <button id="nightmode-btn" style="margin-left:5px;">
+    <i class="fa-solid fa-moon"></i>
+  </button>
+  </div>
+  <div id="count-box" class="count-box"></div>
+  <table id="data-table">
+    <thead>
+      <tr>
+        <th>날짜</th>
+        <th class="col-시간">시간</th>
+        <th class="col-제작사">제작사</th>
+        <th class="col-시즌">시즌</th>
+        <th class="col-장르">장르</th>
+        <th>극</th>
+        <th class="col-자n">자n</th>
+        <th class="col-캐슷">캐슷</th>
+        <th>극장</th>
+        <th class="col-캐보">캐보</th>
+        <th class="col-후기">후기</th>
+        <th class="col-L1">L1</th>
+        <th class="col-L2">L2</th>
+        <th class="col-CB">CB</th>
+        <th class="col-RV">RV</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <div id="cast-modal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+      <div id="cast-modal-content"></div>
+    </div>
+  </div>
+  <div class="scroll-buttons">
+  <button class="to-top-btn">▲</button>
+  <button class="to-bottom-btn">▼</button>
+</div>
+  <script>
+    window.onload = function () {
+      fetch("cast_notes.json")
+      .then(res => res.json())
+      .then(json => castNotesArr = json);
+      
+      fetch("RawData.xlsx")
+        .then(res => res.arrayBuffer())
+        .then(dataArr => {
+          const wb = XLSX.read(dataArr, { type: "array" });
+          const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
+          const header = sheet[0], rows = sheet.slice(1);
+          const showIdx = colNames.map(cn => header.indexOf(cn));
+          data = rows.map(row => showIdx.map(idx => row[idx]));
+          const tIdx = colNames.indexOf("시간"), dIdx = colNames.indexOf("날짜");
+          data.forEach(r => {
+            r[dIdx] = excelDateToStr(r[dIdx]);
+            r[tIdx] = excelTimeToStr(r[tIdx]);
+          });
+          filterData();
+        })
+        .catch(err => { alert("파일을 불러올 수 없습니다."); console.error(err); });
+    };
+
+    const showTitleMap = {
+        스위니: { ko: "스위니 토드", en: "Sweeney Todd" },
+        매다리: { ko: "매디슨 카운티의 다리", en: "The Bridges of Madison County" },
+        킹키: { ko: "킹키부츠", en: "Kinky Boots" },
+        짘슈: { ko: "지저스 크라이스트 수퍼스타", en: "Jesus Christ Superstar" },
+        넥: { ko: "넥스트 투 노멀", en: "Next to Normal" },
+        하타: { ko: "하데스타운", en: "Hadestown" },
+        물랑: { ko: "물랑루즈!", en: "Moulin Rouge!" },
+        오유: { ko: "오페라의 유령", en: "The Phantom of the Opera" },
+        레미: { ko: "레미제라블", en: "Les Misérables" },
+        라이온킹: { ko: "라이온 킹", en: "The Lion King" },
+        럽네다: { ko: "러브 네버 다이즈", en: "Love Never Dies" },
+        백퓨: { ko: "백 투 더 퓨처", en: "Back to the Future" },
+        시카고: { ko: "시카고", en: "Chicago" },
+        킴벌리: { ko: "킴벌리 아킴보", en: "Kimberly Akimbo" },
+        알라딘: { ko: "알라딘", en: "Aladdin" },
+        구텐: { ko: "구텐버그", en: "Gutenberg!" },
+        위키드: { ko: "위키드", en: "Wicked" },
+        저받아: { ko: "해리포터와 저주받은 아이", en: "Harry Potter and the Cursed Child" },
+        프로즌: { ko: "겨울왕국", en: "Frozen" },
+        몰몬: { ko: "더 북 오브 몰몬", en: "The Book of Mormon" },
+        스팸: { ko: "스팸어랏", en: "Monty Python's Spamalot" },
+        스폰지밥: { ko: "네모바지 스폰지밥", en: "The SpongeBob Musical" },
+        식스: { ko: "식스 더 뮤지컬", en: "Six" },
+        워터포: { ko: "워터 포 엘리펀트", en: "Water for Elephants" },
+        아웃사이더: { ko: "아웃사이더", en: "The Outsiders" },
+        노트북: { ko: "노트북", en: "The Notebook" },
+        개츠비: { ko: "위대한 개츠비", en: "The Great Gatsby" },
+      };
+    const colNames = [
+      "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "RV"
+    ];
+    const buttonCols = ["캐보", "후기", "L1", "L2"];
+    let data = [];
+    let castNotesArr = [];
+
+    function isMobile() {
+      return window.innerWidth <= 600;
+    }
+
+    document.getElementById('nightmode-btn').addEventListener('click', function () {
+      document.body.classList.toggle('nightmode');
+      const btn = this;
+      if(document.body.classList.contains('nightmode')) {
+        btn.innerHTML = '<i class="fa-solid fa-sun"></i>';
+      } else {
+        btn.innerHTML = '<i class="fa-solid fa-moon"></i>';
+      }
+    });
+
+    function excelDateToStr(excelDate) {
+      if (typeof excelDate === "number") {
+        const date = new Date(Date.UTC(1899, 11, 30) + excelDate * 86400000);
+        return date.toISOString().slice(0, 10);
+      }
+      return excelDate;
+    }
+
+    function excelTimeToStr(excelTime) {
+      if (typeof excelTime === "number") {
+        let totalMinutes = Math.round(excelTime * 24 * 60);
+        let hours = Math.floor(totalMinutes / 60);
+        let minutes = totalMinutes % 60;
+        return (
+          (hours < 10 ? "0" : "") +
+          hours +
+          ":" +
+          (minutes < 10 ? "0" : "") +
+          minutes
+        );
+      } else if (
+        typeof excelTime === "string" &&
+        excelTime.match(/^\d{1,2}:\d{2}/)
+      ) {
+        return excelTime.slice(0, 5);
+      }
+      return excelTime;
+    }
+
+  
+    //Modal
+    function openModal(content) {
+      document.getElementById("cast-modal-content").innerHTML = content;
+      document.getElementById("cast-modal").style.display = "flex";
+      document.body.style.overflow = "hidden";
+    }
+
+
+    function getGoogleUserContentLink(url) {
+      const match = url.match(/\/file\/d\/([^/]+)\//);
+      if (match) {
+        return `https://lh3.googleusercontent.com/d/${match[1]}`;
+      }
+      return url;
+    }
+
+
+    function getTimezoneAbbr(dateStr) {
+      const d = new Date(dateStr);
+      const ts = d.getTime();
+
+      const inRange = (start, end) =>
+        ts >= new Date(start).getTime() && ts <= new Date(end).getTime();
+
+      if (inRange('2023-11-20', '2023-11-23')) return 'GMT';
+      if (inRange('2024-03-01', '2024-03-03')) return 'GMT';
+
+      if (inRange('2023-08-26', '2023-11-04')) return 'EDT';
+      if (inRange('2023-11-05', '2024-03-09')) return 'EST';
+      if (inRange('2024-03-10', '2024-05-11')) return 'EDT';
+
+      return '';
+    }
+
+    function getRatingStars(row) {
+      const review = (row[colNames.indexOf("RV")] || "").trim();
+      let stars = 0;
+      if (review === "극호") stars = 5;
+      else if (review === "호") stars = 4;
+      else if (review === "평타") stars = 3;
+      else if (review === "불호") stars = 2;
+      else if (review === "극불") stars = 1;
+      if (stars === 0) return '';
+      return `<div class="star-rating">${"★".repeat(stars)}${"☆".repeat(5-stars)}</div>`;
+    }
+
+    function makeModalInfo(row) {
+      const date = row[0]; 
+      const time = row[1];
+      const season = row[3];
+      const genre = row[4];
+      const show = getDisplayTitle(row[5], row[6]);
+      const nth = row[6];
+
+      let dateStr = date;
+      let dayStr = "";
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        const y = date.slice(0, 4);
+        const m = String(Number(date.slice(5, 7)));
+        const d = String(Number(date.slice(8, 10)));
+        const dateObj = new Date(date);
+        const days = ["일", "월", "화", "수", "목", "금", "토"];
+        dayStr = days[dateObj.getDay()];
+        dateStr = `${y}년 ${m}월 ${d}일 (${dayStr})`;
+      }
+
+      let timeStr = time;
+      if (/^\d{1,2}:\d{2}/.test(time)) {
+        const [h, min] = time.split(":");
+        timeStr = `${h.padStart(2, "0")}시 ${min.padStart(2, "0")}분`;
+      }
+
+      const tzAbbr = getTimezoneAbbr(date);
+      if (tzAbbr) {
+        timeStr += ` ${tzAbbr}`;
+      }
+
+      const seasonPart = season ? season.slice(3, 13) : "";
+
+      let genrePart = "";
+      if (genre && genre.includes("중계")) {
+        genrePart = "중계";
+      } else if (genre && genre.includes("DVD")) {
+        genrePart = "DVD";
+      }
+
+      const genreSpace = genrePart ? " " : "";
+
+      return `<div class="modal-info">
+        <div class="datetime-line">
+          ${dateStr}&nbsp;&nbsp;/&nbsp;&nbsp;${timeStr}
+        </div>
+        <div>
+          <span class="title-line">${show} (${seasonPart}${genreSpace}${genrePart})</span>
+        </div>
+        <div class="datetime-line">
+          ${nth}
+        </div>
+      </div>`;
+    }
+
+    function getGenreShort(genre) {
+      if (!genre) return '';
+      if (genre.startsWith('연극 ')) return '연극';
+      if (genre.startsWith('뮤지컬')) return '뮤지컬';
+      if (genre.startsWith('기타 ')) return '기타';
+      return genre;
+    }
+
+    function renameTheater(theater) {
+      if (!theater) return '';
+      if (theater === '-') return '(집관)';
+      return theater;
+    }
+
+    function makeModalFooter(row) {
+      const genre = getGenreShort(row[colNames.indexOf('장르')]);
+      const company = row[colNames.indexOf('제작사')] || '';
+      const theater = renameTheater(row[colNames.indexOf('극장')]);
+      return `
+        <div class="modal-footer">
+          ${genre}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${company}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${theater}
+        </div>
+      `;
+    }
+
+
+    function makeShortcutsHtml(row) {
+      const getUrl = col => {
+        const url = row[colNames.indexOf(col)]?.trim();
+        return url && url !== "-" ? url : null;
+      };
+      return `
+        <div class="modal-shortcuts">
+          ${getUrl("캐보") ? `<a href="${getUrl("캐보")}" class="shortcut-btn" target="_blank" rel="noopener">캐슷보드</a>` : ''}
+          ${getUrl("후기") ? `<a href="${getUrl("후기")}" class="shortcut-btn" target="_blank" rel="noopener">후기</a>` : ''}
+          ${getUrl("L1") ? `<a href="${getUrl("L1")}" class="shortcut-btn" target="_blank" rel="noopener">L1</a>` : ''}
+          ${getUrl("L2") ? `<a href="${getUrl("L2")}" class="shortcut-btn" target="_blank" rel="noopener">L2</a>` : ''}
+        </div>
+      `;
+    }
+
+
+    function boldifyModalColonLines(html) {
+      return html
+        .split(/<br\s*\/?>|\n/g)
+        .map((line) => {
+          const idx = line.indexOf(":");
+          if (idx > 0) {
+            return `<strong>${line.slice(0, idx + 1)}</strong>${line.slice(
+              idx + 1
+            )}`;
+          }
+          return line;
+        })
+        .join("<br>");
+    }
+
+    function highlightModalKeyword(text, keyword) {
+      if (!keyword) return text;
+      const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'gi');
+      return text.replace(regex, match => `<mark>${match}</mark>`);
+    }
+
+    
+    function closeModal() {
+      document.getElementById("cast-modal").style.display = "none";
+      document.body.style.overflow = "";
+    }
+
+    document.getElementById("cast-modal").addEventListener("click", function (e) {
+      if (e.target === this) closeModal();
+    });
+
+
+    //Table
+    function formatCastDisplay(str) {
+      return str.trim().replace(/ /g, ", ").replace(/_/g, " ");
+    }
+
+    function getDisplayTitle(showName, nth) {
+      for (const [key, pair] of Object.entries(showTitleMap)) {
+        if (
+          showName === key ||
+          showName === pair.ko ||
+          showName === pair.en
+        ) {
+          if (nth && nth.includes("(")) {
+            return pair.en;
+          }
+          return pair.ko;
+        }
+      }
+      return showName;
+    }
+
+    function highlightText(text, keyword) {
+      if (!keyword) return text;
+      const re = new RegExp(
+        keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        "gi"
+      );
+      return text.replace(
+        re,
+        (match) => `<span class="highlight">${match}</span>`
+      );
+    }
+
+    function renderTable(filtered) {
+      const search = document.getElementById("search").value.trim();
+      const tbody = document.querySelector("#data-table tbody");
+      tbody.innerHTML = "";
+
+      filtered.forEach((row) => {
+        const tr = document.createElement("tr");
+        let castCellValue = null;
+        let disp = "";
+
+        row.forEach((cell, idx) => {
+          const col = colNames[idx];
+          const td = document.createElement("td");
+          const colClass = {
+            "캐슷": "col-캐슷", "CB": "col-CB", "제작사": "col-제작사",
+            "시즌": "col-시즌", "장르": "col-장르", "시간": "col-시간",
+            "캐보": "col-캐보", "후기": "col-후기", "L1": "col-L1",
+            "L2": "col-L2", "날짜": "col-날짜", "자n": 'col-자n', "RV": "col-RV"
+          }[col];
+          if (colClass) td.className = colClass;
+
+          if (col === "날짜" && isMobile()) {
+            const date = row[colNames.indexOf("날짜")] || "";
+            const time = row[colNames.indexOf("시간")] || "";
+            let yymmdd = /^\d{4}-\d{2}-\d{2}$/.test(date)
+              ? `${date.slice(2,4)}.${date.slice(5,7)}.${date.slice(8,10)}`
+              : date;
+            td.innerHTML = `<span class="mobile-date-time">${highlightText(yymmdd, search)}<br>${highlightText(time, search)}</span>`;
+          }
+          else if (col === "시간" && isMobile()) {
+            td.style.display = "none";
+          }
+          else if (col === "캐슷") {
+            castCellValue = cell;
+            disp = cell ? formatCastDisplay(String(cell)) : "";
+            td.innerHTML = highlightText(disp, search);
+          }
+          else if (col === "극") {
+            const nth = row[colNames.indexOf("자n")];
+            td.innerHTML = highlightText(getDisplayTitle(cell, nth), search);
+          }
+          else {
+            td.innerHTML = highlightText(String(cell ?? ""), search);
+          }
+          tr.appendChild(td);
+        });
+
+
+        tr.addEventListener("click", function (e) {
+          tbody.querySelectorAll("tr").forEach(tr2 => tr2.classList.remove("selected-row"));
+          tr.classList.add("selected-row");
+          
+          const cbIdx = colNames.indexOf("CB");
+          let imgUrl = row[cbIdx]?.trim();
+          if (imgUrl && imgUrl.includes("drive.google.com")) {
+            imgUrl = getGoogleUserContentLink(imgUrl);
+          }
+          const imgHtml = imgUrl
+            ? `<img src="${imgUrl}" class="modal-img">`
+            : "";
+        
+          const castStr = String(castCellValue).trim();
+          const noteObj = castNotesArr.find(obj => obj.cast.trim() === castStr);
+          let modalContent = noteObj?.note?.replace(/\n/g, "<br>") || disp || castCellValue;
+          modalContent = boldifyModalColonLines(modalContent);
+          modalContent = highlightModalKeyword(modalContent, window.lastSearchKeyword);
+          
+          openModal(
+            imgHtml 
+            + makeModalInfo(row) 
+            + makeShortcutsHtml(row) 
+            + modalContent 
+            + getRatingStars(row) 
+            + makeModalFooter(row)
+          );
+          
+        });
+        tbody.appendChild(tr);
+      });
+    }
+
+    function toKoShowName(showName, showTitleMap) {
+      for (const { ko, en } of Object.values(showTitleMap)) {
+        if (showName === ko || showName === en) return ko;
+      }
+      return showName;
+    }
+
+    function renderCount(filtered) {
+      const 본_횟수 = filtered.length;
+      const 극Idx = colNames.indexOf("극");
+      const 극_개수 = new Set(
+        filtered.map(r => toKoShowName(r[극Idx], showTitleMap))
+      ).size;
+      document.getElementById("count-box").innerHTML =
+        `&nbsp;&nbsp;▶ ${극_개수} 극 &nbsp; & &nbsp; ${본_횟수} 회`;
+    }
+
+    function getShowTitleCandidates(search, showTitleMap) {
+      const searchLower = search.toLowerCase();
+      for (const { ko, en } of Object.values(showTitleMap)) {
+        const koLower = ko.toLowerCase();
+        const enLower = en.toLowerCase();
+        if (
+          koLower === searchLower ||
+          enLower === searchLower ||
+          koLower.includes(searchLower) ||
+          enLower.includes(searchLower) ||
+          searchLower.includes(koLower) ||
+          searchLower.includes(enLower)
+        ) {
+          return [koLower, enLower];
+        }
+      }
+      return null;
+    }
+
+    function filterData() {
+      const search = document.getElementById("search").value.trim();
+      window.lastSearchKeyword = search;
+      const selected_col = document.getElementById("selected_col").value;
+      let filtered = data;
+      if (search) {
+        const searchLower = search.toLowerCase();
+        if (!selected_col) {
+          const searchCandidates = getShowTitleCandidates(search, showTitleMap);
+          const searchIdx = colNames
+            .map((name, idx) => (!buttonCols.includes(name) && name !== "CB" && name !== "RV" ? idx : null))
+            .filter(idx => idx !== null);
+          filtered = data.filter(row => {
+            const rowShow = String(row[colNames.indexOf("극")] ?? "").trim().toLowerCase();
+            if (searchCandidates && searchCandidates.includes(rowShow)) return true;
+            return searchIdx.some(
+              idx => String(row[idx] ?? "").toLowerCase().includes(searchLower)
+            );
+          });
+        } else if (selected_col === "+") {
+            const searchCandidates = getShowTitleCandidates(search, showTitleMap);
+            const searchIdx = colNames
+              .map((name, idx) => (!buttonCols.includes(name) && name !== "CB" ? idx : null))
+              .filter(idx => idx !== null);
+
+            filtered = data.filter(row => {
+              const rowShow = String(row[colNames.indexOf("극")] ?? "").trim().toLowerCase();
+              if (searchCandidates && searchCandidates.includes(rowShow)) return true;
+              const baseMatch = searchIdx.some(
+                idx => String(row[idx] ?? "").toLowerCase().includes(searchLower)
+              );
+              if (baseMatch) return true;
+              const castStr = String(row[colNames.indexOf("캐슷")]).trim();
+              const noteObj = castNotesArr.find(obj => obj.cast.trim() === castStr);
+              const noteText = (noteObj?.note ?? "").toLowerCase();
+              if (noteText.includes(searchLower)) return true;
+              return false;
+            });
+        } else if (selected_col === "제작사") {
+          const idx = colNames.indexOf("제작사");
+          filtered = data.filter(row => {
+            const makers = ("┃" + row[idx].replace(/, /g, "┃") + "┃").toLowerCase();
+            return makers.includes("┃" + searchLower + "┃");
+          });
+        } else if (selected_col === "극") {
+          const idx = colNames.indexOf("극");
+          const searchCandidates = getShowTitleCandidates(search, showTitleMap);
+          filtered = data.filter(row => {
+            const rowShow = String(row[idx] ?? "").trim().toLowerCase();
+            if (searchCandidates) {
+              return searchCandidates.includes(rowShow);
+            }
+            return rowShow === searchLower;
+          });
+        } else if (selected_col === "캐슷") {
+          const idx = colNames.indexOf("캐슷");
+          filtered = data.filter(row =>
+            (" " + row[idx] + " ").toLowerCase().includes(" " + searchLower + " ")
+          );
+        } else if (selected_col === "후기") {
+          const idx = colNames.indexOf("RV");
+          let targetText = "";
+          if (search === "AMA") targetText = "극호";
+          else if (search === "POS") targetText = "호";
+          else if (search === "SOS") targetText = "평타";
+          else if (search === "NEG") targetText = "불호";
+          else if (search === "TER") targetText = "극불";
+          if (targetText) {
+            filtered = data.filter(row =>
+              String(row[idx] ?? "").trim() === targetText
+            );
+          } else {
+            filtered = [];
+          }
+        } else {
+          const idx = colNames.indexOf(selected_col);
+          filtered = data.filter(row =>
+            String(row[idx]).toLowerCase().includes(searchLower)
+          );
+        } 
+      }
+      renderCount(filtered);
+      renderTable(filtered);
+    }
+    document.getElementById("search").addEventListener("input", filterData);
+    document.getElementById("selected_col").addEventListener("change", filterData);
+    document.getElementById("search").addEventListener("keydown", e => {
+      if (e.key === "Enter") filterData();
+    });
+    document.addEventListener("keydown", function(e) {
+      if (
+        e.key === "Escape" &&
+        document.getElementById("cast-modal").style.display === "flex"
+      ) {
+        closeModal();
+      }
+    });
+
+
+    document.querySelector('.to-top-btn').addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+    document.querySelector('.to-bottom-btn').addEventListener('click', function() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    });
+
+    const scrollButtons = document.querySelector('.scroll-buttons');
+      let scrollTimer;
+      window.addEventListener('scroll', function() {
+        scrollButtons.classList.add('show');
+        clearTimeout(scrollTimer);
+        scrollTimer = setTimeout(hideButtons, 1000);
+      });
+      scrollButtons.addEventListener('mouseenter', function() {
+        clearTimeout(scrollTimer);
+      });
+      scrollButtons.addEventListener('mouseleave', function() {
+        if (!window.isScrolling) {
+          scrollTimer = setTimeout(hideButtons, 1000);
+        }
+      });
+      function hideButtons() {
+        scrollButtons.classList.remove('show');
+      }
+  </script>
+</body>
+</html>
