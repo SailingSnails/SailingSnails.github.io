@@ -38,7 +38,47 @@
     }
     .controls input { width: 320px; margin-left: 12px; }
     
-    .count-box { margin: 24px 0 18px; font-size: 1.8em; font-weight: 600; }
+    .count-box { margin: 6px 0 18px; font-size: 1.8em; font-weight: 600; }
+    .count-row {
+      display: flex;
+      align-items: center;
+    }
+    #info-btn {
+      margin-left: 8px;
+    }
+    #info-modal table { border-collapse:collapse; width:100%; min-width:350px; }
+    #info-modal th, #info-modal td {
+      border-top:1.5px solid #bbb;
+      border-bottom:1.5px solid #bbb;
+      border-left:none;
+      border-right:none;
+      padding:10px 4px;
+      text-align:center;
+      vertical-align:middle;
+      font-size: 0.85em;
+      cursor: default !important;
+    }
+    #info-modal td.bold {
+      font-weight:600;
+      padding-left:18px;
+      padding-right:18px;
+    }
+    #info-modal td.sum {
+      font-weight:600;
+      text-align:center;
+      padding-left:28px;
+      padding-right:28px;
+    }
+    #info-modal td.season, #info-modal td.count { font-size:0.75em; }
+    #info-modal td.count { color:#a0a0a0; font-weight:300; }
+    #info-modal td.num { text-align:center; }
+    .info-modal-summary {
+      font-size: 1.2em;
+      font-weight: 600;
+      margin-bottom: 12px;
+      margin-left: 9px;
+      text-align: left;
+    }
     
     table {
       border-collapse: collapse;
@@ -87,7 +127,7 @@
       word-break: keep-all;
       line-break: strict;
     }
-    #cast-modal .modal-content {
+    #cast-modal .modal-content, #info-modal .modal-content {
       background: #fff;
       text-align: center;
       border-radius: 10px;
@@ -153,7 +193,7 @@
       color:#888;
       font-weight:300;
     }
-    #cast-modal .close-btn {
+    #cast-modal .close-btn, #info-modal .close-btn {
       position: absolute;
       top: 10px; right: 10px;
       background: none; border: none; cursor: pointer;
@@ -162,7 +202,7 @@
       z-index: 10;
       transition: background 0.2s, color 0.2s;
     }
-    #cast-modal .close-btn:hover { color: #ff5252; }
+    #cast-modal .close-btn:hover, #info-modal .close-btn:hover { color: #ff5252; }
     
     .scroll-buttons {
       position: fixed;
@@ -315,7 +355,20 @@
     <i class="fa-solid fa-moon"></i>
   </button>
   </div>
-  <div id="count-box" class="count-box"></div>
+
+  <div class="count-row">
+    <div id="count-box" class="count-box"></div>
+    <span id="info-btn" style="cursor:pointer; margin-left:10px; font-size:1.1em; vertical-align:middle;">
+      <i class="fa-solid fa-circle-info"></i>
+    </span>
+  </div>
+  <div id="info-modal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:10000; align-items:center; justify-content:center;">
+    <div class="modal-content">
+      <button class="close-btn" id="info-modal-close-btn">&times;</button>
+      <div id="info-modal-content"></div>
+    </div>
+  </div>
+
   <table id="data-table">
     <thead>
       <tr>
@@ -383,22 +436,13 @@
         오유: { ko: "오페라의 유령", en: "The Phantom of the Opera" },
         레미: { ko: "레미제라블", en: "Les Misérables" },
         라이온킹: { ko: "라이온 킹", en: "The Lion King" },
-        럽네다: { ko: "러브 네버 다이즈", en: "Love Never Dies" },
-        백퓨: { ko: "백 투 더 퓨처", en: "Back to the Future" },
         시카고: { ko: "시카고", en: "Chicago" },
-        킴벌리: { ko: "킴벌리 아킴보", en: "Kimberly Akimbo" },
         알라딘: { ko: "알라딘", en: "Aladdin" },
         구텐: { ko: "구텐버그", en: "Gutenberg!" },
         위키드: { ko: "위키드", en: "Wicked" },
         저받아: { ko: "해리포터와 저주받은 아이", en: "Harry Potter and the Cursed Child" },
         프로즌: { ko: "겨울왕국", en: "Frozen" },
-        몰몬: { ko: "더 북 오브 몰몬", en: "The Book of Mormon" },
-        스팸: { ko: "스팸어랏", en: "Monty Python's Spamalot" },
-        스폰지밥: { ko: "네모바지 스폰지밥", en: "The SpongeBob Musical" },
         식스: { ko: "식스 더 뮤지컬", en: "Six" },
-        워터포: { ko: "워터 포 엘리펀트", en: "Water for Elephants" },
-        아웃사이더: { ko: "아웃사이더", en: "The Outsiders" },
-        노트북: { ko: "노트북", en: "The Notebook" },
         개츠비: { ko: "위대한 개츠비", en: "The Great Gatsby" },
       };
     const colNames = [
@@ -759,6 +803,147 @@
       document.getElementById("count-box").innerHTML =
         `&nbsp;&nbsp;▶ ${극_개수} 극 &nbsp; & &nbsp; ${본_횟수} 회`;
     }
+
+    document.getElementById('info-btn').addEventListener('click', function() {
+      const tbody = document.querySelector("#data-table tbody");
+      const rows = Array.from(tbody.rows);
+      if (rows.length === 0) {
+        document.getElementById('info-modal-content').innerHTML = "<div style='padding:20px; text-align:center;'>검색 결과 없음</div>";
+        document.getElementById('info-modal').style.display = 'flex';
+        return;
+      }
+
+      const 극Idx = colNames.indexOf("극");
+      const 시즌Idx = colNames.indexOf("시즌");
+      const nthIdx = colNames.indexOf("자n");
+
+      function getShowKey(show) {
+        show = show.trim();
+        for (const [key, pair] of Object.entries(showTitleMap)) {
+          if (
+            show === key ||
+            show === pair.ko ||
+            show === pair.en
+          ) {
+            return { en: pair.en, ko: pair.ko };
+          }
+        }
+        return null;
+      }
+
+      function getSeasonKey(season, nth) {
+        season = season.trim();
+        if (/^\d+$/.test(season)) {
+          const match = nth && nth.match(/\(([^)]+)\)/);
+          if (match) {
+            return `${season} ${match[1]}`;
+          }
+          return season;
+        }
+        return season;
+      }
+
+      const summary = {};
+      rows.forEach(tr => {
+        const tds = Array.from(tr.cells);
+        const showRaw = tds[극Idx].innerText.trim();
+        const showKey = getShowKey(showRaw);
+        let showId, showDisplay;
+        if (showKey) {
+          showId = showKey.en + "|" + showKey.ko;
+          showDisplay = `${showKey.en}<br>[${showKey.ko}]`;
+        } else {
+          showId = showRaw;
+          showDisplay = showRaw;
+        }
+
+        const seasonRaw = tds[시즌Idx].innerText.trim().slice(3, 13);
+        const nth = tds[nthIdx]?.innerText?.trim() || "";
+        const seasonKey = getSeasonKey(seasonRaw, nth);
+
+        if (!summary[showId]) summary[showId] = { showDisplay, seasons: [], count: {} };
+        if (!summary[showId].count[seasonKey]) {
+          summary[showId].seasons.push(seasonKey);
+          summary[showId].count[seasonKey] = 0;
+        }
+        summary[showId].count[seasonKey]++;
+      });
+
+      const totalByShow = {};
+      Object.keys(summary).forEach(showId => {
+        totalByShow[showId] = Object.values(summary[showId].count).reduce((a, b) => a + b, 0);
+      });
+
+      const search = document.getElementById("search").value.trim();
+      const 본_횟수 = rows.length;
+      const 극_개수 = Object.keys(summary).length;
+
+      let html = `
+      <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>극</th>
+            <th>시즌</th>
+            <th>횟수</th>
+            <th>총합</th>
+          </tr>
+        </thead>
+        <tbody>
+      `;
+
+      const rowColors = ['#fff', '#f9f9f9'];
+      let colorIdx = 0;
+
+      Object.keys(summary).forEach(showId => {
+        const showDisplay = summary[showId].showDisplay;
+        const seasons = summary[showId].seasons;
+        const total = totalByShow[showId];
+        const bgColor = rowColors[colorIdx % 2];
+        if (seasons.length === 1) {
+          const seasonKey = seasons[0];
+          html += `<tr style="background:${bgColor};">
+            <td class="bold">${showDisplay}</td>
+            <td class="season">${seasonKey}</td>
+            <td class="count"></td>
+            <td class="sum">${total}</td>
+          </tr>`;
+        } else {
+          seasons.forEach((seasonKey, idx) => {
+            html += `<tr style="background:${bgColor};">`;
+            if (idx === 0) {
+              html += `<td class="bold" rowspan="${seasons.length}" style="vertical-align:middle;">${showDisplay}</td>`;
+            }
+            html += `<td class="season">${seasonKey}</td>`;
+            html += `<td class="count">${summary[showId].count[seasonKey]}</td>`;
+            if (idx === 0) {
+              html += `<td class="sum" rowspan="${seasons.length}" style="vertical-align:middle;">${total}</td>`;
+            }
+            html += `</tr>`;
+          });
+        }
+        colorIdx++;
+      });
+
+      html += `<div class="info-modal-summary">
+        ◈ ${search || "전체"}: &nbsp;&nbsp; ${극_개수} 극, &nbsp; ${본_횟수} 회 
+      </div>
+      </tbody></table></div>`;
+
+      document.getElementById('info-modal-content').innerHTML = html;
+      document.getElementById('info-modal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    });
+
+    function closeInfoModal() {
+      document.getElementById('info-modal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    document.getElementById('info-modal-close-btn').onclick = closeInfoModal;
+    document.getElementById('info-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeInfoModal();
+    });
+
 
     function getShowTitleCandidates(search, showTitleMap) {
       const searchLower = search.toLowerCase();
