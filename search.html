@@ -43,8 +43,12 @@
       display: flex;
       align-items: center;
     }
-    #info-btn {
+    #info-btn i {
       margin-left: 8px;
+      font-size: 1.5em;
+      position: relative;
+      top: -4px;
+      color: #4E5968;
     }
     #info-modal table { border-collapse:collapse; width:100%; min-width:350px; }
     #info-modal th, #info-modal td {
@@ -238,6 +242,7 @@
       background: #444444;
     }
 
+
     @media (max-width: 600px) {
       .controls input, .controls select {
         font-size: 16px !important;
@@ -248,7 +253,24 @@
       .controls input { width: 180px; margin-left: 10px; }
       
       .count-box { margin: 15px 0 15px; font-size: 1.5em; font-weight: 600; }
-      
+      #info-btn i {
+        margin-left: 8px;
+        vertical-align: middle;
+        position: flex;
+        top: 4px;
+        font-size: 1.3em;
+      }
+      #info-modal table { min-width:150px; }
+      #info-modal td.bold {
+        padding-left:10px;
+        padding-right:10px;
+      }
+      #info-modal td.sum {
+        padding-left:23px;
+        padding-right:23px;
+      }
+      #info-modal td.season, #info-modal td.count { font-size:0.7em; }
+
       th.col-시간, td.col-시간, 
       th.col-제작사, td.col-제작사,
       th.col-시즌, td.col-시즌, 
@@ -277,18 +299,25 @@
     }
     }
 
+
+    body.nightmode {
+      background: #181a1b;
+      color: #e0e0e0;
+    }
+
     #nightmode-btn {
       font-size: 1.2em;
       padding: 6px 9px;
       border-radius: 12px;
     }
 
-    body.nightmode {
-      background: #181a1b;
+    body.nightmode #info-modal .modal-content {
+      background: #242629;
       color: #e0e0e0;
     }
+
     body.nightmode table {
-      background: #232629;
+      background: #242629;
       color: #e0e0e0;
     }
     body.nightmode th {
@@ -297,7 +326,6 @@
     }
     body.nightmode td {
       border: 1px solid #333;
-      background: #232629;
       color: #e0e0e0;
     }
     body.nightmode .controls input,
@@ -496,7 +524,7 @@
     }
 
   
-    //Modal
+    //Cast Modal
     function openModal(content) {
       document.getElementById("cast-modal-content").innerHTML = content;
       document.getElementById("cast-modal").style.display = "flex";
@@ -804,6 +832,8 @@
         `&nbsp;&nbsp;▶ ${극_개수} 극 &nbsp; & &nbsp; ${본_횟수} 회`;
     }
 
+
+    //Info Modal
     document.getElementById('info-btn').addEventListener('click', function() {
       const tbody = document.querySelector("#data-table tbody");
       const rows = Array.from(tbody.rows);
@@ -892,7 +922,11 @@
         <tbody>
       `;
 
-      const rowColors = ['#fff', '#f9f9f9'];
+      const isNight = document.body.classList.contains('nightmode');
+      const rowColors = isNight
+        ? ['#232526', '#181A1B']
+        : ['#fff', '#f1f3f4'];
+
       let colorIdx = 0;
 
       Object.keys(summary).forEach(showId => {
