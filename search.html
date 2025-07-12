@@ -47,7 +47,7 @@
       margin-left: 8px;
       font-size: 1.5em;
       position: relative;
-      top: -4px;
+      top: -5px;
       color: #4E5968;
     }
     #info-modal table { border-collapse:collapse; width:100%; min-width:350px; }
@@ -254,7 +254,7 @@
       
       .count-box { margin: 15px 0 15px; font-size: 1.5em; font-weight: 600; }
       #info-btn i {
-        margin-left: 8px;
+        margin-left: 4px;
         top: 0px;
         font-size: 1.3em;
       }
@@ -385,7 +385,7 @@
   <div class="count-row">
     <div id="count-box" class="count-box"></div>
     <span id="info-btn" style="cursor:pointer; margin-left:10px; font-size:1.1em; vertical-align:middle;">
-      <i class="fa-solid fa-circle-info"></i>
+      <i class="fa-solid fa-table-list"></i>
     </span>
   </div>
   <div id="info-modal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:10000; align-items:center; justify-content:center;">
@@ -520,6 +520,178 @@
       }
       return excelTime;
     }
+
+    function renderCount(filtered) {
+      const 본_횟수 = filtered.length;
+      const 극Idx = colNames.indexOf("극");
+      const 극_개수 = new Set(
+        filtered.map(r => toKoShowName(r[극Idx], showTitleMap))
+      ).size;
+      document.getElementById("count-box").innerHTML =
+        `&nbsp;&nbsp;▶ ${극_개수} 극 &nbsp; & &nbsp; ${본_횟수} 회`;
+    }
+
+
+    //Info Modal
+    let infoModalSortDesc = false;
+    let infoModalOriginalShowIds = [];
+
+    document.getElementById('info-btn').addEventListener('click', function() {
+      const tbody = document.querySelector("#data-table tbody");
+      const rows = Array.from(tbody.rows);
+      if (rows.length === 0) {
+        document.getElementById('info-modal-content').innerHTML = "<div style='padding:20px; text-align:center;'>검색 결과 없음</div>";
+        document.getElementById('info-modal').style.display = 'flex';
+        return;
+      }
+
+      const 극Idx = colNames.indexOf("극");
+      const 시즌Idx = colNames.indexOf("시즌");
+      const nthIdx = colNames.indexOf("자n");
+
+      function getShowKey(show) {
+        show = show.trim();
+        for (const [key, pair] of Object.entries(showTitleMap)) {
+          if (
+            show === key ||
+            show === pair.ko ||
+            show === pair.en
+          ) {
+            return { en: pair.en, ko: pair.ko };
+          }
+        }
+        return null;
+      }
+
+      function getSeasonKey(season, nth) {
+        season = season.trim();
+        if (/^\d+$/.test(season)) {
+          const match = nth && nth.match(/\(([^)]+)\)/);
+          if (match) {
+            return `${season} ${match[1]}`;
+          }
+          return season;
+        }
+        return season;
+      }
+
+      const summary = {};
+      rows.forEach(tr => {
+        const tds = Array.from(tr.cells);
+        const showRaw = tds[극Idx].innerText.trim();
+        const showKey = getShowKey(showRaw);
+        let showId, showDisplay;
+        if (showKey) {
+          showId = showKey.en + "|" + showKey.ko;
+          showDisplay = `${showKey.en}<br>[${showKey.ko}]`;
+        } else {
+          showId = showRaw;
+          showDisplay = showRaw;
+        }
+
+        const seasonRaw = tds[시즌Idx].innerText.trim().slice(3, 13);
+        const nth = tds[nthIdx]?.innerText?.trim() || "";
+        const seasonKey = getSeasonKey(seasonRaw, nth);
+
+        if (!summary[showId]) summary[showId] = { showDisplay, seasons: [], count: {} };
+        if (!summary[showId].count[seasonKey]) {
+          summary[showId].seasons.push(seasonKey);
+          summary[showId].count[seasonKey] = 0;
+        }
+        summary[showId].count[seasonKey]++;
+      });
+
+      const totalByShow = {};
+      Object.keys(summary).forEach(showId => {
+        totalByShow[showId] = Object.values(summary[showId].count).reduce((a, b) => a + b, 0);
+      });
+
+      const search = document.getElementById("search").value.trim();
+      const 본_횟수 = rows.length;
+      const 극_개수 = Object.keys(summary).length;
+      const isNight = document.body.classList.contains('nightmode');
+
+      infoModalSortDesc = false;
+      infoModalOriginalShowIds = Object.keys(summary);
+
+      function renderInfoModalTable(sortDesc) {
+        const rowColors = isNight ? ['#232526', '#181A1B'] : ['#fff', '#f1f3f4'];
+        let showIds;
+        if (sortDesc) {
+          showIds = [...infoModalOriginalShowIds].sort((a, b) => totalByShow[b] - totalByShow[a]);
+        } else {
+          showIds = [...infoModalOriginalShowIds];
+        }
+        let html = `<div style="overflow-x:auto;"><table id="info-modal-table"><thead><tr>
+          <th>극</th>
+          <th>시즌</th>
+          <th>횟수</th>
+          <th id="info-modal-sort-sum" style="cursor:pointer;">
+            총합
+            <span style="font-size:0.8em;">
+              ${sortDesc ? "↩" : "▼"}
+            </span>
+          </th>
+        </tr></thead><tbody>`;
+        let colorIdx = 0;
+        showIds.forEach(showId => {
+          const showDisplay = summary[showId].showDisplay;
+          const seasons = summary[showId].seasons;
+          const total = totalByShow[showId];
+          const bgColor = rowColors[colorIdx % 2];
+          if (seasons.length === 1) {
+            const seasonKey = seasons[0];
+            html += `<tr style="background:${bgColor};">
+              <td class="bold">${showDisplay}</td>
+              <td class="season">${seasonKey}</td>
+              <td class="count"></td>
+              <td class="sum">${total}</td>
+            </tr>`;
+          } else {
+            seasons.forEach((seasonKey, idx) => {
+              html += `<tr style="background:${bgColor};">`;
+              if (idx === 0) {
+                html += `<td class="bold" rowspan="${seasons.length}" style="vertical-align:middle;">${showDisplay}</td>`;
+              }
+              html += `<td class="season">${seasonKey}</td>`;
+              html += `<td class="count">${summary[showId].count[seasonKey]}</td>`;
+              if (idx === 0) {
+                html += `<td class="sum" rowspan="${seasons.length}" style="vertical-align:middle;">${total}</td>`;
+              }
+              html += `</tr>`;
+            });
+          }
+          colorIdx++;
+        });
+        html += `
+          <div class="info-modal-summary">
+            ◈ ${search || "전체"}: &nbsp;&nbsp; ${극_개수} 극, &nbsp; ${본_횟수} 회 
+          </div></div>
+          </tbody></table>
+          `;
+        return html;
+      }
+
+
+      document.getElementById('info-modal-content').innerHTML = renderInfoModalTable(infoModalSortDesc);
+      document.getElementById('info-modal').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+
+      document.getElementById('info-modal-sort-sum').onclick = function() {
+        infoModalSortDesc = !infoModalSortDesc;
+        document.getElementById('info-modal-content').innerHTML = renderInfoModalTable(infoModalSortDesc);
+        document.getElementById('info-modal-sort-sum').onclick = arguments.callee;
+      };
+    });
+
+    function closeInfoModal() {
+      document.getElementById('info-modal').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+    document.getElementById('info-modal-close-btn').onclick = closeInfoModal;
+    document.getElementById('info-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeInfoModal();
+    });
 
   
     //Cast Modal
@@ -820,163 +992,6 @@
       return showName;
     }
 
-    function renderCount(filtered) {
-      const 본_횟수 = filtered.length;
-      const 극Idx = colNames.indexOf("극");
-      const 극_개수 = new Set(
-        filtered.map(r => toKoShowName(r[극Idx], showTitleMap))
-      ).size;
-      document.getElementById("count-box").innerHTML =
-        `&nbsp;&nbsp;▶ ${극_개수} 극 &nbsp; & &nbsp; ${본_횟수} 회`;
-    }
-
-
-    //Info Modal
-    document.getElementById('info-btn').addEventListener('click', function() {
-      const tbody = document.querySelector("#data-table tbody");
-      const rows = Array.from(tbody.rows);
-      if (rows.length === 0) {
-        document.getElementById('info-modal-content').innerHTML = "<div style='padding:20px; text-align:center;'>검색 결과 없음</div>";
-        document.getElementById('info-modal').style.display = 'flex';
-        return;
-      }
-
-      const 극Idx = colNames.indexOf("극");
-      const 시즌Idx = colNames.indexOf("시즌");
-      const nthIdx = colNames.indexOf("자n");
-
-      function getShowKey(show) {
-        show = show.trim();
-        for (const [key, pair] of Object.entries(showTitleMap)) {
-          if (
-            show === key ||
-            show === pair.ko ||
-            show === pair.en
-          ) {
-            return { en: pair.en, ko: pair.ko };
-          }
-        }
-        return null;
-      }
-
-      function getSeasonKey(season, nth) {
-        season = season.trim();
-        if (/^\d+$/.test(season)) {
-          const match = nth && nth.match(/\(([^)]+)\)/);
-          if (match) {
-            return `${season} ${match[1]}`;
-          }
-          return season;
-        }
-        return season;
-      }
-
-      const summary = {};
-      rows.forEach(tr => {
-        const tds = Array.from(tr.cells);
-        const showRaw = tds[극Idx].innerText.trim();
-        const showKey = getShowKey(showRaw);
-        let showId, showDisplay;
-        if (showKey) {
-          showId = showKey.en + "|" + showKey.ko;
-          showDisplay = `${showKey.en}<br>[${showKey.ko}]`;
-        } else {
-          showId = showRaw;
-          showDisplay = showRaw;
-        }
-
-        const seasonRaw = tds[시즌Idx].innerText.trim().slice(3, 13);
-        const nth = tds[nthIdx]?.innerText?.trim() || "";
-        const seasonKey = getSeasonKey(seasonRaw, nth);
-
-        if (!summary[showId]) summary[showId] = { showDisplay, seasons: [], count: {} };
-        if (!summary[showId].count[seasonKey]) {
-          summary[showId].seasons.push(seasonKey);
-          summary[showId].count[seasonKey] = 0;
-        }
-        summary[showId].count[seasonKey]++;
-      });
-
-      const totalByShow = {};
-      Object.keys(summary).forEach(showId => {
-        totalByShow[showId] = Object.values(summary[showId].count).reduce((a, b) => a + b, 0);
-      });
-
-      const search = document.getElementById("search").value.trim();
-      const 본_횟수 = rows.length;
-      const 극_개수 = Object.keys(summary).length;
-
-      let html = `
-      <div style="overflow-x:auto;">
-      <table>
-        <thead>
-          <tr>
-            <th>극</th>
-            <th>시즌</th>
-            <th>횟수</th>
-            <th>총합</th>
-          </tr>
-        </thead>
-        <tbody>
-      `;
-
-      const isNight = document.body.classList.contains('nightmode');
-      const rowColors = isNight
-        ? ['#232526', '#181A1B']
-        : ['#fff', '#f1f3f4'];
-
-      let colorIdx = 0;
-
-      Object.keys(summary).forEach(showId => {
-        const showDisplay = summary[showId].showDisplay;
-        const seasons = summary[showId].seasons;
-        const total = totalByShow[showId];
-        const bgColor = rowColors[colorIdx % 2];
-        if (seasons.length === 1) {
-          const seasonKey = seasons[0];
-          html += `<tr style="background:${bgColor};">
-            <td class="bold">${showDisplay}</td>
-            <td class="season">${seasonKey}</td>
-            <td class="count"></td>
-            <td class="sum">${total}</td>
-          </tr>`;
-        } else {
-          seasons.forEach((seasonKey, idx) => {
-            html += `<tr style="background:${bgColor};">`;
-            if (idx === 0) {
-              html += `<td class="bold" rowspan="${seasons.length}" style="vertical-align:middle;">${showDisplay}</td>`;
-            }
-            html += `<td class="season">${seasonKey}</td>`;
-            html += `<td class="count">${summary[showId].count[seasonKey]}</td>`;
-            if (idx === 0) {
-              html += `<td class="sum" rowspan="${seasons.length}" style="vertical-align:middle;">${total}</td>`;
-            }
-            html += `</tr>`;
-          });
-        }
-        colorIdx++;
-      });
-
-      html += `<div class="info-modal-summary">
-        ◈ ${search || "전체"}: &nbsp;&nbsp; ${극_개수} 극, &nbsp; ${본_횟수} 회 
-      </div>
-      </tbody></table></div>`;
-
-      document.getElementById('info-modal-content').innerHTML = html;
-      document.getElementById('info-modal').style.display = 'flex';
-      document.body.style.overflow = 'hidden';
-    });
-
-    function closeInfoModal() {
-      document.getElementById('info-modal').style.display = 'none';
-      document.body.style.overflow = '';
-    }
-    document.getElementById('info-modal-close-btn').onclick = closeInfoModal;
-    document.getElementById('info-modal').addEventListener('click', function(e) {
-      if (e.target === this) closeInfoModal();
-    });
-
-
     function getShowTitleCandidates(search, showTitleMap) {
       const searchLower = search.toLowerCase();
       for (const { ko, en } of Object.values(showTitleMap)) {
@@ -1095,6 +1110,7 @@
     });
 
 
+    //Scroll Buttons
     document.querySelector('.to-top-btn').addEventListener('click', function() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
