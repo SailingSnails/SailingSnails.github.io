@@ -254,8 +254,8 @@
       
       .count-box { margin: 15px 0 15px; font-size: 1.5em; font-weight: 600; }
       #info-btn i {
-        margin-left: 4px;
-        top: 0px;
+        margin-left: 3px;
+        top: 0.95px;
         font-size: 1.3em;
       }
       #info-modal table { min-width:150px; }
@@ -298,22 +298,28 @@
     }
 
 
+    #nightmode-btn {
+      font-size: 1.2em;
+      padding: 6px;
+      border-radius: 12px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
     body.nightmode {
       background: #181a1b;
       color: #e0e0e0;
     }
-
-    #nightmode-btn {
-      font-size: 1.2em;
-      padding: 6px 9px;
-      border-radius: 12px;
-    }
-
     body.nightmode #info-modal .modal-content {
       background: #242629;
       color: #e0e0e0;
     }
-
+    body.nightmode #info-btn i {
+      color: #fef3c7;
+    }
     body.nightmode table {
       background: #242629;
       color: #e0e0e0;
