@@ -113,6 +113,14 @@
       text-align: center;
       cursor: pointer;
     }
+    th.col-\# {
+      font-size: 0.85em;
+    }
+    td.col-\# {
+      color: #888;
+      font-size: 0.75em;
+    }
+    th.col-횟수, td.col-횟수,
     th.col-CB, td.col-CB,
     th.col-캐보, td.col-캐보, 
     th.col-후기, td.col-후기,
@@ -284,6 +292,7 @@
       }
       #info-modal td.season, #info-modal td.count { font-size:0.7em; }
 
+      th.col-횟수, td.col-횟수, 
       th.col-시간, td.col-시간, 
       th.col-제작사, td.col-제작사,
       th.col-시즌, td.col-시즌, 
@@ -408,6 +417,8 @@
   <table id="data-table">
     <thead>
       <tr>
+        <th class="col-#">#</th>
+        <th class="col-횟수">횟수</th>
         <th>날짜</th>
         <th class="col-시간">시간</th>
         <th class="col-제작사">제작사</th>
@@ -482,9 +493,9 @@
         개츠비: { ko: "위대한 개츠비", en: "The Great Gatsby" },
       };
     const colNames = [
-      "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "RV"
+      "횟수", "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "RV"
     ];
-    const buttonCols = ["캐보", "후기", "L1", "L2"];
+    const excludeCols = ["캐보", "후기", "L1", "L2", "CB", "RV", "횟수"];
     let data = [];
     let castNotesArr = [];
 
@@ -588,7 +599,7 @@
       const summary = {};
       rows.forEach(tr => {
         const tds = Array.from(tr.cells);
-        const showRaw = tds[극Idx].innerText.trim();
+        const showRaw = tds[극Idx + 1].innerText.trim();
         const showKey = getShowKey(showRaw);
         let showId, showDisplay;
         if (showKey) {
@@ -599,8 +610,8 @@
           showDisplay = showRaw;
         }
 
-        const seasonRaw = tds[시즌Idx].innerText.trim().slice(3, 13);
-        const nth = tds[nthIdx]?.innerText?.trim() || "";
+        const seasonRaw = tds[시즌Idx + 1].innerText.trim().slice(3, 13);
+        const nth = tds[nthIdx + 1]?.innerText?.trim() || "";
         const seasonKey = getSeasonKey(seasonRaw, nth);
 
         if (!summary[showId]) summary[showId] = { showDisplay, seasons: [], count: {} };
@@ -751,12 +762,15 @@
     }
 
     function makeModalInfo(row) {
-      const date = row[0]; 
-      const time = row[1];
-      const season = row[3];
-      const genre = row[4];
-      const show = getDisplayTitle(row[5], row[6]);
-      const nth = row[6];
+      const date   = row[colNames.indexOf("날짜")];
+      const time   = row[colNames.indexOf("시간")];
+      const season = row[colNames.indexOf("시즌")];
+      const genre  = row[colNames.indexOf("장르")];
+      const show   = getDisplayTitle(
+        row[colNames.indexOf("극")],
+        row[colNames.indexOf("자n")]
+      );
+      const nth    = row[colNames.indexOf("자n")];
 
       let dateStr = date;
       let dayStr = "";
@@ -821,12 +835,13 @@
     }
 
     function makeModalFooter(row) {
+      const number = row[colNames.indexOf('횟수')];
       const genre = getGenreShort(row[colNames.indexOf('장르')]);
       const company = row[colNames.indexOf('제작사')] || '';
       const theater = renameTheater(row[colNames.indexOf('극장')]);
       return `
         <div class="modal-footer">
-          ${genre}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${company}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${theater}
+          \#${number}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${genre}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${company}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${theater}
         </div>
       `;
     }
@@ -919,8 +934,14 @@
       const tbody = document.querySelector("#data-table tbody");
       tbody.innerHTML = "";
 
-      filtered.forEach((row) => {
+      filtered.forEach((row, i) => {
         const tr = document.createElement("tr");
+        
+        const tdNum = document.createElement("td");
+        tdNum.className = "col-#";
+        tdNum.textContent = i + 1;
+        tr.appendChild(tdNum);
+
         let castCellValue = null;
         let disp = "";
 
@@ -928,6 +949,7 @@
           const col = colNames[idx];
           const td = document.createElement("td");
           const colClass = {
+            "횟수": "col-횟수",
             "캐슷": "col-캐슷", "CB": "col-CB", "제작사": "col-제작사",
             "시즌": "col-시즌", "장르": "col-장르", "시간": "col-시간",
             "캐보": "col-캐보", "후기": "col-후기", "L1": "col-L1",
@@ -936,8 +958,8 @@
           if (colClass) td.className = colClass;
 
           if (col === "날짜" && isMobile()) {
-            const date = row[colNames.indexOf("날짜")] || "";
-            const time = row[colNames.indexOf("시간")] || "";
+            const date = row[colNames.indexOf("날짜")];
+            const time = row[colNames.indexOf("시간")];
             let yymmdd = /^\d{4}-\d{2}-\d{2}$/.test(date)
               ? `${date.slice(2,4)}.${date.slice(5,7)}.${date.slice(8,10)}`
               : date;
@@ -961,11 +983,11 @@
           tr.appendChild(td);
         });
 
-
+        const countIdx = colNames.indexOf("횟수");
         tr.addEventListener("click", function (e) {
           tbody.querySelectorAll("tr").forEach(tr2 => tr2.classList.remove("selected-row"));
           tr.classList.add("selected-row");
-          
+
           const cbIdx = colNames.indexOf("CB");
           let imgUrl = row[cbIdx]?.trim();
           if (imgUrl && imgUrl.includes("drive.google.com")) {
@@ -974,13 +996,13 @@
           const imgHtml = imgUrl
             ? `<img src="${imgUrl}" class="modal-img">`
             : "";
-        
-          const castStr = String(castCellValue).trim();
-          const noteObj = castNotesArr.find(obj => obj.cast.trim() === castStr);
-          let modalContent = noteObj?.note?.replace(/\n/g, "<br>") || disp || castCellValue;
+
+          const key = row[countIdx];
+          const noteObj = castNotesArr.find(obj => String(obj.key) === String(key));
+          let modalContent = noteObj?.note?.replace(/\n/g, "<br>") || "";
           modalContent = boldifyModalColonLines(modalContent);
           modalContent = highlightModalKeyword(modalContent, window.lastSearchKeyword);
-          
+
           openModal(
             imgHtml 
             + makeModalInfo(row) 
@@ -989,8 +1011,8 @@
             + getRatingStars(row) 
             + makeModalFooter(row)
           );
-          
         });
+
         tbody.appendChild(tr);
       });
     }
@@ -1031,7 +1053,7 @@
         if (!selected_col) {
           const searchCandidates = getShowTitleCandidates(search, showTitleMap);
           const searchIdx = colNames
-            .map((name, idx) => (!buttonCols.includes(name) && name !== "CB" && name !== "RV" ? idx : null))
+            .map((name, idx) => (!excludeCols.includes(name) ? idx : null))
             .filter(idx => idx !== null);
           filtered = data.filter(row => {
             const rowShow = String(row[colNames.indexOf("극")] ?? "").trim().toLowerCase();
@@ -1043,7 +1065,7 @@
         } else if (selected_col === "+") {
             const searchCandidates = getShowTitleCandidates(search, showTitleMap);
             const searchIdx = colNames
-              .map((name, idx) => (!buttonCols.includes(name) && name !== "CB" ? idx : null))
+              .map((name, idx) => (!excludeCols.includes(name) ? idx : null))
               .filter(idx => idx !== null);
 
             filtered = data.filter(row => {
@@ -1053,8 +1075,8 @@
                 idx => String(row[idx] ?? "").toLowerCase().includes(searchLower)
               );
               if (baseMatch) return true;
-              const castStr = String(row[colNames.indexOf("캐슷")]).trim();
-              const noteObj = castNotesArr.find(obj => obj.cast.trim() === castStr);
+              const key = row[countIdx];
+              const noteObj = castNotesArr.find(obj => String(obj.key) === String(key));
               const noteText = (noteObj?.note ?? "").toLowerCase();
               if (noteText.includes(searchLower)) return true;
               return false;
