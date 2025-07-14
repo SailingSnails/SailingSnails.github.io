@@ -1049,6 +1049,7 @@
       window.lastSearchKeyword = search;
       const selected_col = document.getElementById("selected_col").value;
       let filtered = data;
+      const countIdx = colNames.indexOf("횟수");
       if (search) {
         const searchLower = search.toLowerCase();
         if (!selected_col) {
@@ -1064,24 +1065,28 @@
             );
           });
         } else if (selected_col === "+") {
-            const searchCandidates = getShowTitleCandidates(search, showTitleMap);
-            const searchIdx = colNames
-              .map((name, idx) => (!excludeCols.includes(name) ? idx : null))
-              .filter(idx => idx !== null);
+          const searchCandidates = getShowTitleCandidates(search, showTitleMap);
+          const searchIdx = colNames
+            .map((name, idx) => (!excludeCols.includes(name) ? idx : null))
+            .filter(idx => idx !== null);
 
-            filtered = data.filter(row => {
-              const rowShow = String(row[colNames.indexOf("극")] ?? "").trim().toLowerCase();
-              if (searchCandidates && searchCandidates.includes(rowShow)) return true;
-              const baseMatch = searchIdx.some(
-                idx => String(row[idx] ?? "").toLowerCase().includes(searchLower)
-              );
-              if (baseMatch) return true;
-              const key = row[countIdx];
-              const noteObj = castNotesArr.find(obj => String(obj.key) === String(key));
-              const noteText = (noteObj?.note ?? "").toLowerCase();
-              if (noteText.includes(searchLower)) return true;
-              return false;
-            });
+          filtered = data.filter(row => {
+            const rowShow = String(row[colNames.indexOf("극")] ?? "").trim().toLowerCase();
+            
+            if (searchCandidates && searchCandidates.includes(rowShow)) return true;
+            
+            const baseMatch = searchIdx.some(
+              idx => String(row[idx] ?? "").toLowerCase().includes(searchLower)
+            );
+            if (baseMatch) return true;
+
+            const key = row[countIdx];
+            const noteObj = castNotesArr.find(obj => String(obj.key) === String(key));
+            const noteText = (noteObj?.note ?? "").toLowerCase();
+            if (noteText.includes(searchLower)) return true;
+            
+            return false;
+          });
         } else if (selected_col === "제작사") {
           const idx = colNames.indexOf("제작사");
           filtered = data.filter(row => {
