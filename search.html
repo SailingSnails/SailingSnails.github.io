@@ -143,62 +143,78 @@
       left: 0; top: 0;
       width: 100dvw;
       height: 100dvh;
-      background: rgba(0,0,0,0.3);
+      background: rgba(0, 0, 0, 0.45);
       z-index: 9999;
       align-items: center;
       justify-content: center;
       word-break: keep-all;
       line-break: strict;
+      transition: background 0.3s ease;
     }
-    #cast-modal .modal-content, #info-modal .modal-content {
-      background: #fff;
+    #cast-modal .modal-content,
+    #info-modal .modal-content {
+      background: #ffffff;
       text-align: center;
-      border-radius: 10px;
-      padding: 28px 20px;
+      border-radius: 14px;
+      padding: 32px 24px;
       min-width: 300px;
       max-width: 600px;
       max-height: 80vh;
       line-height: 1.5;
-      color: #222;
-      box-shadow: 0 6px 32px #0002;
+      color: #333;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
       position: relative;
       font-size: 1.1em;
       font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
       font-weight: 300;
-      animation: popIn 0.2s;
+      animation: popIn 0.25s ease;
       overflow-y: auto;
     }
     #cast-modal .modal-content strong {
       font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
       font-weight: 600;
     }
+    .number-line {
+      display: inline-block;
+      background-color: #f0f2f5;
+      border: 1px solid #ccc;
+      color: #333;
+      font-size: 0.95em;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 40px;
+      margin: 14px 0;
+      text-align: center;
+    }
     .modal-img {
       width: 100%;
-      max-width: 500px;
-      max-height: 450px;
-      display: block;
-      margin: 0 auto 16px auto;
+      max-width: 450px;
+      max-height: 500px;
       object-fit: contain;
+      margin: 0 auto 16px auto;
+      display: block;
     }
     .modal-info {
       font-size: 1.4em;
-      font-weight: bold;
+      font-weight: 600;
     }
     .datetime-line {
       color: #919394;
       font-size: 0.8em !important;
+      line-height: 1.6;
     }
-    .star-rating{
-      color: #fff
+    .star-rating {
+      color: #fff;
     }
     .modal-shortcuts {
       display: flex;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 10px;
-      margin: 16px 0;
+      margin: 20px 0;
     }
     .shortcut-btn {
-      background: #2c3e50;
+      background: #56667a;
       color: #fff;
       border: none;
       border-radius: 10px;
@@ -206,26 +222,30 @@
       font-size: 0.93em;
       font-weight: 600;
       text-decoration: none;
-      box-shadow: 0 2px 8px #0001;
-      transition: background 0.2s;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      transition: all 0.2s ease;
     }
-    .shortcut-btn:hover { background: #444444; }
+    .shortcut-btn:hover {
+      background: #324159;
+    }
     .modal-footer {
-      margin-top:30px;
-      font-size:0.8em;
-      color:#888;
-      font-weight:300;
+      margin-top: 30px;
+      font-size: 0.8em;
+      color: #777;
+      font-weight: 300;
     }
-    #cast-modal .close-btn, #info-modal .close-btn {
-      position: absolute;
-      top: 10px; right: 10px;
+    #cast-modal .close-btn,
+    #info-modal .close-btn {
+      position: absolute; top: 10px; right: 10px;
       background: none; border: none; cursor: pointer;
       font-size: 2em; font-weight: bold; color: #222;
       text-shadow: 0 0 2px #e0e0e0, 1px 1px 0 #e0e0e0, -1px -1px 0 #e0e0e0, 0 0 4px #e0e0e0;
-      z-index: 10;
-      transition: background 0.2s, color 0.2s;
+      z-index: 10; transition: background 0.2s, color 0.2s ease;
     }
-    #cast-modal .close-btn:hover, #info-modal .close-btn:hover { color: #ff5252; }
+    #cast-modal .close-btn:hover,
+    #info-modal .close-btn:hover {
+      color: #e74c3c;
+    }
     
     .scroll-buttons {
       position: fixed;
@@ -352,6 +372,10 @@
       color: #e0e0e0;
       border: 2px solid #555;
     }
+    body.nightmode .number-line {
+      background-color: #cdcdcd !important;
+      border: 1px solid #ddd !important;
+    }
     body.nightmode .highlight { background: #ffe066; color: #1a1a1a; font-weight: 600; }
     body.nightmode mark { background: #ffe066; color: #b71c1c; font-weight: 600; }
     body.nightmode tr.selected-row td,
@@ -408,7 +432,7 @@
       <i class="fa-solid fa-table-list"></i>
     </span>
   </div>
-  <div id="info-modal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:10000; align-items:center; justify-content:center;">
+  <div id="info-modal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.45); z-index:10000; align-items:center; justify-content:center;">
     <div class="modal-content">
       <button class="close-btn" id="info-modal-close-btn">&times;</button>
       <div id="info-modal-content"></div>
@@ -723,6 +747,10 @@
       document.body.style.overflow = "hidden";
     }
 
+    function getNumber(row) {
+      const number = row[colNames.indexOf("횟수")];
+      return `<div class="number-line">#${number}</div>`;
+    }
 
     function getGoogleUserContentLink(url) {
       const match = url.match(/\/file\/d\/([^/]+)\//);
@@ -836,13 +864,12 @@
     }
 
     function makeModalFooter(row) {
-      const number = row[colNames.indexOf('횟수')];
       const genre = getGenreShort(row[colNames.indexOf('장르')]);
       const company = row[colNames.indexOf('제작사')] || '';
       const theater = renameTheater(row[colNames.indexOf('극장')]);
       return `
         <div class="modal-footer">
-          \#${number}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${genre}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${company}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${theater}
+          ${genre}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${company}&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;${theater}
         </div>
       `;
     }
@@ -1006,6 +1033,7 @@
 
           openModal(
             imgHtml 
+            + getNumber(row)
             + makeModalInfo(row) 
             + makeShortcutsHtml(row) 
             + modalContent 
@@ -1050,6 +1078,18 @@
       const selected_col = document.getElementById("selected_col").value;
       let filtered = data;
       const countIdx = colNames.indexOf("횟수");
+
+      if (/^#\d+$/.test(search)) {
+        const numStr = search.slice(1);
+        filtered = data.filter(row => {
+          const v = String(row[countIdx]);
+          return v.startsWith(numStr);
+        });
+        renderCount(filtered);
+        renderTable(filtered);
+        return;
+      }
+
       if (search) {
         const searchLower = search.toLowerCase();
         if (!selected_col) {
