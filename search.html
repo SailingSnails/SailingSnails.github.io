@@ -20,13 +20,46 @@
       font-size: 0.95em;
       background: #f1f4f8;
     }
+
+    .mode-segmented {
+      display: flex;
+      gap: 0;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 2px solid #222;
+      background: #fff;
+      margin-left: 12px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .mode-segmented .segment {
+      flex: 1;
+      background: #fff;
+      color: #222;
+      border: none;
+      padding: 4px 11px;
+      font-size: 0.9em;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.15s, color 0.15s;
+    }
+    .mode-segmented .segment:not(:last-child) {
+      border-right: 1px solid #aaa;
+    }
+    .mode-segmented .segment.active, 
+    .mode-segmented .segment:active {
+      background: #2c3e50;
+      color: #fff;
+    }
     
     .controls {
       display: flex;
       gap: 12px;
       align-items: center;
-      margin-top: 24px;
+      margin-top: 20px;
       margin-bottom: 40px;
+      justify-content: center;   
     }
     .controls input, .controls select {
       background: #fff;
@@ -36,7 +69,7 @@
       padding: 8px;
       font-size: 1.25em;
     }
-    .controls input { width: 320px; margin-left: 12px; }
+    .controls input { width: 380px; }
     #nightmode-btn {
       font-size: 1.2em;
       padding: 6px;
@@ -47,6 +80,7 @@
       align-items: center;
       justify-content: center;
       box-sizing: border-box;
+      background-color: #BBBDC0;
     }
     
     .count-box { margin: 6px 0 18px; font-size: 1.8em; font-weight: 600; }
@@ -287,9 +321,9 @@
         font-size: 16px !important;
       }
       body { font-size: 0.8em; }
-      .controls { margin-top: 20px; margin-bottom: 30px; }
+      .controls { margin-top: 12px; margin-bottom: 20px; }
       .controls input, .controls select { font-size: 1.2em }
-      .controls input { width: 180px; margin-left: 10px; }
+      .controls input { width: 180px;}
 
       #nightmode-btn i {
         color: #222;
@@ -328,6 +362,10 @@
         box-sizing: border-box;
         font-size: 1em;
       }
+      #info-modal .modal-content {
+        max-width: 98vw;
+        min-width: 0;
+      }
       .modal-img {
         max-height: 60vh;
       }
@@ -347,6 +385,18 @@
       background: #181a1b;
       color: #e0e0e0;
     }
+    body.nightmode .mode-segmented {
+      background: #232629;
+      border-color: #bbb;
+    }
+    body.nightmode .mode-segmented .segment {
+      background: #232629;
+      color: #ddd;
+    }
+    body.nightmode .mode-segmented .segment.active {
+      background: #2f3e46;
+      color: #fff;
+    }
     body.nightmode #info-modal .modal-content {
       background: #242629;
       color: #e0e0e0;
@@ -359,7 +409,7 @@
       color: #e0e0e0;
     }
     body.nightmode th {
-      background: #11171d;
+      background: #2f3e46;
       color: #fff;
     }
     body.nightmode td {
@@ -370,7 +420,7 @@
     body.nightmode .controls select {
       background: #232629;
       color: #e0e0e0;
-      border: 2px solid #555;
+      border: 2px solid #bbb;
     }
     body.nightmode .number-line {
       background-color: #cdcdcd !important;
@@ -405,6 +455,11 @@
   </style>
 </head>
 <body>
+  <div class="mode-segmented" id="mode-segmented">
+    <button type="button" class="segment active" data-mode="전체">전체</button>
+    <button type="button" class="segment" data-mode="직관">직관</button>
+    <button type="button" class="segment" data-mode="집관">집관</button>
+  </div>
   <div class="controls">
     <input type="text" id="search" placeholder="검색어 입력" />
     <select id="selected_col">
@@ -474,11 +529,15 @@
   <button class="to-bottom-btn">▼</button>
 </div>
   <script>
+    let allData = [];
+    let data = [];
+    let castNotesArr = [];
+    let mode = "전체";
+
     window.onload = function () {
       fetch("cast_notes.json")
-      .then(res => res.json())
-      .then(json => castNotesArr = json);
-      
+        .then(res => res.json())
+        .then(json => castNotesArr = json);
       fetch("RawData.xlsx")
         .then(res => res.arrayBuffer())
         .then(dataArr => {
@@ -486,16 +545,42 @@
           const sheet = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: "" });
           const header = sheet[0], rows = sheet.slice(1);
           const showIdx = colNames.map(cn => header.indexOf(cn));
-          data = rows.map(row => showIdx.map(idx => row[idx]));
+          allData = rows.map(row => showIdx.map(idx => row[idx]));
           const tIdx = colNames.indexOf("시간"), dIdx = colNames.indexOf("날짜");
-          data.forEach(r => {
+          allData.forEach(r => {
             r[dIdx] = excelDateToStr(r[dIdx]);
             r[tIdx] = excelTimeToStr(r[tIdx]);
           });
-          filterData();
+          filterAndSetData();
         })
         .catch(err => { alert("파일을 불러올 수 없습니다."); console.error(err); });
     };
+
+    function filterAndSetData() {
+      const genreIdx = colNames.indexOf("장르");
+      if (mode === "전체") {
+        data = allData;
+      } else if (mode === "직관") {
+        data = allData.filter(row =>
+          !String(row[genreIdx]||'').includes("중계") && !String(row[genreIdx]||'').includes("DVD")
+        );
+      } else if (mode === "집관") {
+        data = allData.filter(row =>
+          String(row[genreIdx]||'').includes("중계") || String(row[genreIdx]||'').includes("DVD")
+        );
+      }
+      filterData();
+    }
+
+    document.getElementById("mode-segmented").addEventListener("click", function(e) {
+      if (e.target.classList.contains("segment")) {
+        this.querySelectorAll(".segment").forEach(btn => btn.classList.remove("active"));
+        e.target.classList.add("active");
+        mode = e.target.getAttribute("data-mode");
+        filterAndSetData();
+      }
+    });
+
 
     const showTitleMap = {
         스위니: { ko: "스위니 토드", en: "Sweeney Todd" },
@@ -521,8 +606,6 @@
       "횟수", "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "RV"
     ];
     const excludeCols = ["캐보", "후기", "L1", "L2", "CB", "RV", "횟수"];
-    let data = [];
-    let castNotesArr = [];
 
     function isMobile() {
       return window.innerWidth <= 600;
