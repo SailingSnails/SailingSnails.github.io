@@ -7,13 +7,20 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
-    @font-face { font-family: "Freesentation"; src: url("./Freesentation-3Light.ttf") format("truetype");
+    @font-face {
+      font-family: "Freesentation";
+      src: url("./Freesentation-3Light.ttf") format("truetype");
       font-weight: 300;
     }
-    @font-face { font-family: "Freesentation"; src: url("./Freesentation-6SemiBold.ttf") format("truetype");
+    @font-face {
+      font-family: "Freesentation";
+      src: url("./Freesentation-6SemiBold.ttf") format("truetype");
       font-weight: 600;
     }
-    body, input, select, table, th, td { font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif; }
+
+    body, input, select, table, th, td {
+      font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
+    }
     body {
       font-weight: 300;
       color: #222;
@@ -21,6 +28,16 @@
       background: #f1f4f8;
     }
 
+    /* --- Nightmode --- */
+    body.nightmode {
+      background: #181a1b;
+      color: #e0e0e0;
+    }
+
+
+    /* =======================================
+       Segmented Btn
+       ======================================= */
     .mode-segmented {
       display: flex;
       gap: 0;
@@ -42,7 +59,7 @@
       font-size: 0.9em;
       cursor: pointer;
       font-weight: 600;
-      transition: background 0.15s, color 0.15s;
+      transition: background 0.1s, color 0.1s;
     }
     .mode-segmented .segment:not(:last-child) {
       border-right: 1px solid #aaa;
@@ -52,8 +69,26 @@
       background: #2c3e50;
       color: #fff;
     }
-    
-    .controls {
+
+    /* --- Nightmode --- */
+    body.nightmode .mode-segmented {
+      background: #232629;
+      border-color: #bbb;
+    }
+    body.nightmode .mode-segmented .segment {
+      background: #232629;
+      color: #ddd;
+    }
+    body.nightmode .mode-segmented .segment.active {
+      background: #2f3e46;
+      color: #fff;
+    }
+
+
+    /* =======================================
+       Search Box & Nightmode Btn
+       ======================================= */
+    .searchbox {
       display: flex;
       gap: 12px;
       align-items: center;
@@ -61,7 +96,7 @@
       margin-bottom: 40px;
       justify-content: center;   
     }
-    .controls input, .controls select {
+    .searchbox input, .searchbox select {
       background: #fff;
       color: #222;
       border: 2px solid #222;
@@ -69,8 +104,9 @@
       padding: 8px;
       font-size: 1.25em;
     }
-    .controls input { width: 380px; }
+    .searchbox input { width: 380px; }
     #nightmode-btn {
+      margin-left: 5px;
       font-size: 1.2em;
       padding: 6px;
       border-radius: 12px;
@@ -82,21 +118,83 @@
       box-sizing: border-box;
       background-color: #BBBDC0;
     }
-    
-    .count-box { margin: 6px 0 18px; font-size: 1.8em; font-weight: 600; }
-    .count-row {
-      display: flex;
-      align-items: center;
+
+    /* --- Nightmode --- */
+    body.nightmode .searchbox input,
+    body.nightmode .searchbox select {
+      background: #232629;
+      color: #e0e0e0;
+      border: 2px solid #bbb;
     }
-    #info-btn i {
+
+
+    /* =======================================
+       Summary & tblshow Btn
+       ======================================= */
+    .summary { 
+      display: flex; 
+      align-items: center; 
+    }
+    .summary-line { 
+      margin: 6px 12px 18px; 
+      font-size: 1.8em; 
+      font-weight: 600; }
+    .tblshow-btn {
+      cursor: pointer;
+      vertical-align: middle;
+    }
+    #tblshow-btn i {
       margin-left: 8px;
       font-size: 1.5em;
       position: relative;
       top: -5px;
       color: #4E5968;
     }
-    #info-modal table { border-collapse:collapse; width:100%; min-width:350px; }
-    #info-modal th, #info-modal td {
+
+    /* --- Nightmode --- */
+    body.nightmode #tblshow-btn i {
+      color: #fef3c7;
+    }
+
+
+    /* =======================================
+       Show Table Modal
+       ======================================= */
+    .tblshow-modal {
+      display: none;
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.75);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+    #tblshow-modal .modal-content {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 32px 24px;
+      min-width: 350px;
+      max-width: 98dvw;
+      max-height: 80dvh;
+      line-height: 1.5;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      position: relative;
+      font-size: 1.1em;
+      font-weight: 300;
+      animation: popIn 0.25s ease;
+      overflow-y: auto;
+    }
+    .tblshow-modal-summary {
+      font-size: 1.2em;
+      font-weight: 600;
+      margin-bottom: 12px;
+      margin-left: 9px;
+    }
+    #tblshow-modal table { border-collapse:collapse; width:100%; min-width:350px; }
+    #tblshow-modal th, #tblshow-modal td {
       border-top:1.5px solid #bbb;
       border-bottom:1.5px solid #bbb;
       border-left:none;
@@ -107,32 +205,51 @@
       font-size: 0.85em;
       cursor: default !important;
     }
-    #info-modal td.bold {
+    #tblshow-modal td.bold {
       font-weight:600;
       padding-left:18px;
       padding-right:18px;
     }
-    #info-modal td.sum {
+    #tblshow-modal td.sum {
       font-weight:600;
       text-align:center;
       padding-left:28px;
       padding-right:28px;
     }
-    #info-modal td.season, #info-modal td.count { font-size:0.75em; }
-    #info-modal td.count { color:#a0a0a0; font-weight:300; }
-    #info-modal td.num { text-align:center; }
-    .info-modal-summary {
-      font-size: 1.2em;
-      font-weight: 600;
-      margin-bottom: 12px;
-      margin-left: 9px;
-      text-align: left;
+    #tblshow-modal td.season, #tblshow-modal td.count { font-size:0.75em; }
+    #tblshow-modal td.count { color:#a0a0a0; font-weight:300; }
+
+    #tblshow-modal .close-btn,
+    #cast-modal .close-btn {
+      position: absolute; top: 10px; right: 10px;
+      background: none; border: none; cursor: pointer;
+      font-size: 2em; font-weight: bold; color: #222;
+      text-shadow: 0 0 2px #e0e0e0, 1px 1px 0 #e0e0e0, -1px -1px 0 #e0e0e0, 0 0 4px #e0e0e0;
+      z-index: 10; transition: background 0.2s, color 0.2s ease;
+    }
+    #tblshow-modal .close-btn:hover,
+    #cast-modal .close-btn:hover { color: #e74c3c; }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
     }
     
+    /* --- Nightmode --- */
+    body.nightmode #tblshow-modal .modal-content {
+      background: #242629;
+      color: #e0e0e0;
+    }
+
+
+    /* =======================================
+       Main Table
+       ======================================= */
     table {
       border-collapse: collapse;
       background: #fff;
-      width: 100%;
+      width: 99%;
+      margin-left: auto;
+      margin-right: auto;
       word-break: keep-all;
       line-break: strict;
     }
@@ -147,13 +264,8 @@
       text-align: center;
       cursor: pointer;
     }
-    th.col-\# {
-      font-size: 0.85em;
-    }
-    td.col-\# {
-      color: #888;
-      font-size: 0.75em;
-    }
+    th.col-\# { font-size: 0.85em; }
+    td.col-\# { color: #888; font-size: 0.75em; }
     th.col-횟수, td.col-횟수,
     th.col-CB, td.col-CB,
     th.col-캐보, td.col-캐보, 
@@ -162,22 +274,47 @@
     th.col-L2, td.col-L2,
     th.col-RV, td.col-RV { display: none; }
     .col-캐슷 { text-align: left !important; }
-    .highlight { background: #ffe066; font-weight: 600; }
-    mark { background: #ffe066; color: #b71c1c; font-weight: 600; }
-    .selected-row { background: #fef3c7 !important; font-weight: 600; }
-    
-    @keyframes popIn {
-      from { transform: scale(0.9); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+    .selected-row { 
+      background: #fef3c7 !important; 
+      font-weight: 600; 
+    }
+    .highlight { 
+      background: #ffe066; 
+      font-weight: 600; 
+    }
+    mark { 
+      background: #ffe066; 
+      color: #b71c1c; 
+      font-weight: 600; 
     }
 
+    /* --- Nightmode --- */
+    body.nightmode table {
+      background: #242629;
+      color: #e0e0e0;
+    }
+    body.nightmode th {
+      background: #2f3e46;
+      color: #e0e0e0;
+    }
+    body.nightmode td {
+      border: 1px solid #333;
+      color: #e0e0e0;
+    }
+    body.nightmode .selected-row { background: #4E5968 !important;}
+    body.nightmode .highlight { color: #1a1a1a }
+
+
+    /* =======================================
+       Cast Modal
+       ======================================= */
     #cast-modal {
       display: none;
       position: fixed;
       left: 0; top: 0;
       width: 100dvw;
       height: 100dvh;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(0, 0, 0, 0.75);
       z-index: 9999;
       align-items: center;
       justify-content: center;
@@ -185,8 +322,7 @@
       line-break: strict;
       transition: background 0.3s ease;
     }
-    #cast-modal .modal-content,
-    #info-modal .modal-content {
+    #cast-modal .modal-content {
       background: #ffffff;
       text-align: center;
       border-radius: 14px;
@@ -195,20 +331,21 @@
       max-width: 600px;
       max-height: 80vh;
       line-height: 1.5;
-      color: #333;
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
       position: relative;
       font-size: 1.1em;
-      font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
-      font-weight: 300;
       animation: popIn 0.25s ease;
       overflow-y: auto;
     }
-    #cast-modal .modal-content strong {
-      font-family: "Freesentation", "Malgun Gothic", Arial, sans-serif;
-      font-weight: 600;
+    .modal-img {
+      width: 100%;
+      max-width: 450px;
+      max-height: 500px;
+      object-fit: contain;
+      margin: 0 auto 16px auto;
+      display: block;
     }
-    .number-line {
+    .numberKey {
       display: inline-block;
       background-color: #f0f2f5;
       border: 1px solid #ccc;
@@ -220,34 +357,16 @@
       margin: 14px 0;
       text-align: center;
     }
-    .modal-img {
-      width: 100%;
-      max-width: 450px;
-      max-height: 500px;
-      object-fit: contain;
-      margin: 0 auto 16px auto;
-      display: block;
-    }
-    .modal-info {
-      font-size: 1.4em;
-      font-weight: 600;
-    }
-    .datetime-line {
-      color: #919394;
-      font-size: 0.8em !important;
-      line-height: 1.6;
-    }
-    .star-rating {
-      color: #fff;
-    }
-    .modal-shortcuts {
+    .modal-header { font-size: 1.4em; font-weight: 600; }
+    .datetime-line { color: #919394; font-size: 0.8em !important; line-height: 1.6; }
+    .modal-hyperlinks {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
       gap: 10px;
       margin: 20px 0;
     }
-    .shortcut-btn {
+    .hyperlink-btn {
       background: #56667a;
       color: #fff;
       border: none;
@@ -259,28 +378,43 @@
       box-shadow: 0 3px 8px rgba(0,0,0,0.1);
       transition: all 0.2s ease;
     }
-    .shortcut-btn:hover {
-      background: #324159;
+    .hyperlink-btn:hover { background: #324159; }
+    #cast-modal .modal-content strong {
+      font-weight: 600;
     }
+    .star-rating { color: #fff; }
     .modal-footer {
       margin-top: 30px;
       font-size: 0.8em;
       color: #777;
-      font-weight: 300;
     }
-    #cast-modal .close-btn,
-    #info-modal .close-btn {
-      position: absolute; top: 10px; right: 10px;
-      background: none; border: none; cursor: pointer;
-      font-size: 2em; font-weight: bold; color: #222;
-      text-shadow: 0 0 2px #e0e0e0, 1px 1px 0 #e0e0e0, -1px -1px 0 #e0e0e0, 0 0 4px #e0e0e0;
-      z-index: 10; transition: background 0.2s, color 0.2s ease;
+
+    /* --- Nightmode --- */
+    body.nightmode #cast-modal .modal-content {
+      background: #232629;
+      color: #d4d3d3;
     }
-    #cast-modal .close-btn:hover,
-    #info-modal .close-btn:hover {
-      color: #e74c3c;
+    body.nightmode .numberKey {
+      background-color: #cdcdcd !important;
+      border: 1px solid #ddd !important;
     }
-    
+    body.nightmode .hyperlink-btn,
+    body.nightmode .to-top-btn,
+    body.nightmode .to-bottom-btn {
+      background: #d9d6d6;
+      color: #222;
+    }
+    body.nightmode .hyperlink-btn:hover,
+    body.nightmode .to-top-btn:hover,
+    body.nightmode .to-bottom-btn:hover {
+      background: #888;
+    }
+    body.nightmode .star-rating { color: #232629; }
+
+
+    /* =======================================
+       Scroll Buttons
+       ======================================= */
     .scroll-buttons {
       position: fixed;
       right: 30px;
@@ -311,41 +445,31 @@
       transition: background 0.2s;
     }
     .to-top-btn:hover,
-    .to-bottom-btn:hover {
-      background: #444444;
-    }
+    .to-bottom-btn:hover { background: #444444; }
 
 
+    /* =======================================
+       Mobile
+       ======================================= */
     @media (max-width: 600px) {
-      .controls input, .controls select {
-        font-size: 16px !important;
-      }
       body { font-size: 0.8em; }
-      .controls { margin-top: 12px; margin-bottom: 20px; }
-      .controls input, .controls select { font-size: 1.2em }
-      .controls input { width: 180px;}
 
-      #nightmode-btn i {
-        color: #222;
-      }
+      .searchbox { margin-top: 12px; margin-bottom: 20px; }
+      .searchbox input, .searchbox select { font-size: 16px !important; }
+      .searchbox input { width: 180px;}
+      #nightmode-btn i { color: #222; }
+
+      .summary-line { margin: 15px 5px 15px; font-size: 1.5em; font-weight: 600; }
+      #tblshow-btn i { top: 0.95px; font-size: 1.3em; }
+
+      #tblshow-modal .modal-content { max-width: 98vw; min-width: 0; }
+      #tblshow-modal table { min-width:150px; }
+      #tblshow-modal td.bold { padding-left:10px; padding-right:10px; }
+      #tblshow-modal td.sum { padding-left:23px; padding-right:23px; }
+      #tblshow-modal td.season, #tblshow-modal td.count { font-size:0.7em; }
       
-      .count-box { margin: 15px 0 15px; font-size: 1.5em; font-weight: 600; }
-      #info-btn i {
-        margin-left: 3px;
-        top: 0.95px;
-        font-size: 1.3em;
-      }
-      #info-modal table { min-width:150px; }
-      #info-modal td.bold {
-        padding-left:10px;
-        padding-right:10px;
-      }
-      #info-modal td.sum {
-        padding-left:23px;
-        padding-right:23px;
-      }
-      #info-modal td.season, #info-modal td.count { font-size:0.7em; }
-
+      table { width: 100% !important; }
+      .mobile-date-time { line-height: 1.6; display: inline-block; }
       th.col-\#, td.col-\#, 
       th.col-횟수, td.col-횟수, 
       th.col-시간, td.col-시간, 
@@ -353,8 +477,7 @@
       th.col-시즌, td.col-시즌, 
       th.col-자n, td.col-자n, 
       th.col-장르, td.col-장르 { display: none !important; }
-      .mobile-date-time { line-height: 1.6; display: inline-block; }
-
+      
       #cast-modal .modal-content {
         max-width: 95vw;
         max-height: 80vh;
@@ -362,105 +485,25 @@
         box-sizing: border-box;
         font-size: 1em;
       }
-      #info-modal .modal-content {
-        max-width: 98vw;
-        min-width: 0;
-      }
-      .modal-img {
-        max-height: 60vh;
-      }
-      .shortcut-btn {
-        font-size: 1.1em;
-      }
+      .modal-img { max-height: 60vh; }
+      .hyperlink-btn { font-size: 1.1em; }
       #cast-modal .close-btn { font-size: 2.5em; color: #222; }
 
-      .scroll-buttons {
-      right: 23px;
-      bottom: 40px;
+      .scroll-buttons { right: 23px; bottom: 40px; }
     }
-    }
-
-
-    body.nightmode {
-      background: #181a1b;
-      color: #e0e0e0;
-    }
-    body.nightmode .mode-segmented {
-      background: #232629;
-      border-color: #bbb;
-    }
-    body.nightmode .mode-segmented .segment {
-      background: #232629;
-      color: #ddd;
-    }
-    body.nightmode .mode-segmented .segment.active {
-      background: #2f3e46;
-      color: #fff;
-    }
-    body.nightmode #info-modal .modal-content {
-      background: #242629;
-      color: #e0e0e0;
-    }
-    body.nightmode #info-btn i {
-      color: #fef3c7;
-    }
-    body.nightmode table {
-      background: #242629;
-      color: #e0e0e0;
-    }
-    body.nightmode th {
-      background: #2f3e46;
-      color: #fff;
-    }
-    body.nightmode td {
-      border: 1px solid #333;
-      color: #e0e0e0;
-    }
-    body.nightmode .controls input,
-    body.nightmode .controls select {
-      background: #232629;
-      color: #e0e0e0;
-      border: 2px solid #bbb;
-    }
-    body.nightmode .number-line {
-      background-color: #cdcdcd !important;
-      border: 1px solid #ddd !important;
-    }
-    body.nightmode .highlight { background: #ffe066; color: #1a1a1a; font-weight: 600; }
-    body.nightmode mark { background: #ffe066; color: #b71c1c; font-weight: 600; }
-    body.nightmode tr.selected-row td,
-    body.nightmode .selected-row td,
-    body.nightmode .selected-row {
-      background: #4E5968 !important;
-    }
-    body.nightmode #cast-modal .modal-content {
-      background: #232629;
-      color: #d4d3d3;
-    }
-    body.nightmode .star-rating{
-      color: #232629
-    }
-    body.nightmode .shortcut-btn,
-    body.nightmode .to-top-btn,
-    body.nightmode .to-bottom-btn {
-      background: #d9d6d6;
-      color: #222;
-    }
-    body.nightmode .shortcut-btn:hover,
-    body.nightmode .to-top-btn:hover,
-    body.nightmode .to-bottom-btn:hover {
-      background: #888;
-    }
-
   </style>
 </head>
+
+
 <body>
+  
   <div class="mode-segmented" id="mode-segmented">
     <button type="button" class="segment active" data-mode="전체">전체</button>
     <button type="button" class="segment" data-mode="직관">직관</button>
     <button type="button" class="segment" data-mode="집관">집관</button>
   </div>
-  <div class="controls">
+
+  <div class="searchbox">
     <input type="text" id="search" placeholder="검색어 입력" />
     <select id="selected_col">
       <option value="">전체</option>
@@ -476,21 +519,22 @@
       <option value="후기">후기</option>
       <option value="+">+</option>
     </select>
-    <button id="nightmode-btn" style="margin-left:5px;">
+    <button id="nightmode-btn">
     <i class="fa-solid fa-moon"></i>
   </button>
   </div>
 
-  <div class="count-row">
-    <div id="count-box" class="count-box"></div>
-    <span id="info-btn" style="cursor:pointer; margin-left:10px; font-size:1.1em; vertical-align:middle;">
+  <div class="summary">
+    <div id="summary-line" class="summary-line"></div>
+    <span id="tblshow-btn" class="tblshow-btn">
       <i class="fa-solid fa-table-list"></i>
     </span>
   </div>
-  <div id="info-modal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.45); z-index:10000; align-items:center; justify-content:center;">
+
+  <div id="tblshow-modal" class="tblshow-modal">
     <div class="modal-content">
-      <button class="close-btn" id="info-modal-close-btn">&times;</button>
-      <div id="info-modal-content"></div>
+      <button class="close-btn" id="tblshow-modal-close-btn">&times;</button>
+      <div id="tblshow-modal-content"></div>
     </div>
   </div>
 
@@ -518,16 +562,19 @@
     </thead>
     <tbody></tbody>
   </table>
+  
   <div id="cast-modal">
     <div class="modal-content">
       <button class="close-btn" onclick="closeModal()">&times;</button>
       <div id="cast-modal-content"></div>
     </div>
   </div>
+
   <div class="scroll-buttons">
-  <button class="to-top-btn">▲</button>
-  <button class="to-bottom-btn">▼</button>
-</div>
+    <button class="to-top-btn">▲</button>
+    <button class="to-bottom-btn">▼</button>
+  </div>
+
   <script>
     let allData = [];
     let data = [];
@@ -656,21 +703,21 @@
       const 극_개수 = new Set(
         filtered.map(r => toKoShowName(r[극Idx], showTitleMap))
       ).size;
-      document.getElementById("count-box").innerHTML =
+      document.getElementById("summary-line").innerHTML =
         `&nbsp;&nbsp;▶ ${극_개수} 극 &nbsp; & &nbsp; ${본_횟수} 회`;
     }
 
 
-    //Info Modal
-    let infoModalSortDesc = false;
-    let infoModalOriginalShowIds = [];
+    //tblshow Modal
+    let tblshowModalSortDesc = false;
+    let tblshowModalOriginalShowIds = [];
 
-    document.getElementById('info-btn').addEventListener('click', function() {
+    document.getElementById('tblshow-btn').addEventListener('click', function() {
       const tbody = document.querySelector("#data-table tbody");
       const rows = Array.from(tbody.rows);
       if (rows.length === 0) {
-        document.getElementById('info-modal-content').innerHTML = "<div style='padding:20px; text-align:center;'>검색 결과 없음</div>";
-        document.getElementById('info-modal').style.display = 'flex';
+        document.getElementById('tblshow-modal-content').innerHTML = "<div style='padding:20px; text-align:center;'>검색 결과 없음</div>";
+        document.getElementById('tblshow-modal').style.display = 'flex';
         return;
       }
 
@@ -740,22 +787,22 @@
       const 극_개수 = Object.keys(summary).length;
       const isNight = document.body.classList.contains('nightmode');
 
-      infoModalSortDesc = false;
-      infoModalOriginalShowIds = Object.keys(summary);
+      tblshowModalSortDesc = false;
+      tblshowModalOriginalShowIds = Object.keys(summary);
 
-      function renderInfoModalTable(sortDesc) {
+      function rendertblshowModalTable(sortDesc) {
         const rowColors = isNight ? ['#232526', '#181A1B'] : ['#fff', '#f1f3f4'];
         let showIds;
         if (sortDesc) {
-          showIds = [...infoModalOriginalShowIds].sort((a, b) => totalByShow[b] - totalByShow[a]);
+          showIds = [...tblshowModalOriginalShowIds].sort((a, b) => totalByShow[b] - totalByShow[a]);
         } else {
-          showIds = [...infoModalOriginalShowIds];
+          showIds = [...tblshowModalOriginalShowIds];
         }
-        let html = `<div style="overflow-x:auto;"><table id="info-modal-table"><thead><tr>
+        let html = `<div style="overflow-x:auto;"><table id="tblshow-modal-table"><thead><tr>
           <th>극</th>
           <th>시즌</th>
           <th>횟수</th>
-          <th id="info-modal-sort-sum" style="cursor:pointer;">
+          <th id="tblshow-modal-sort-sum" style="cursor:pointer;">
             총합
             <span style="font-size:0.8em;">
               ${sortDesc ? "↩" : "▼"}
@@ -793,7 +840,7 @@
           colorIdx++;
         });
         html += `
-          <div class="info-modal-summary">
+          <div class="tblshow-modal-summary">
             ◈ ${search || "전체"}: &nbsp;&nbsp; ${극_개수} 극, &nbsp; ${본_횟수} 회 
           </div></div>
           </tbody></table>
@@ -802,24 +849,24 @@
       }
 
 
-      document.getElementById('info-modal-content').innerHTML = renderInfoModalTable(infoModalSortDesc);
-      document.getElementById('info-modal').style.display = 'flex';
+      document.getElementById('tblshow-modal-content').innerHTML = rendertblshowModalTable(tblshowModalSortDesc);
+      document.getElementById('tblshow-modal').style.display = 'flex';
       document.body.style.overflow = 'hidden';
 
-      document.getElementById('info-modal-sort-sum').onclick = function() {
-        infoModalSortDesc = !infoModalSortDesc;
-        document.getElementById('info-modal-content').innerHTML = renderInfoModalTable(infoModalSortDesc);
-        document.getElementById('info-modal-sort-sum').onclick = arguments.callee;
+      document.getElementById('tblshow-modal-sort-sum').onclick = function() {
+        tblshowModalSortDesc = !tblshowModalSortDesc;
+        document.getElementById('tblshow-modal-content').innerHTML = rendertblshowModalTable(tblshowModalSortDesc);
+        document.getElementById('tblshow-modal-sort-sum').onclick = arguments.callee;
       };
     });
 
-    function closeInfoModal() {
-      document.getElementById('info-modal').style.display = 'none';
+    function closetblshowModal() {
+      document.getElementById('tblshow-modal').style.display = 'none';
       document.body.style.overflow = '';
     }
-    document.getElementById('info-modal-close-btn').onclick = closeInfoModal;
-    document.getElementById('info-modal').addEventListener('click', function(e) {
-      if (e.target === this) closeInfoModal();
+    document.getElementById('tblshow-modal-close-btn').onclick = closetblshowModal;
+    document.getElementById('tblshow-modal').addEventListener('click', function(e) {
+      if (e.target === this) closetblshowModal();
     });
 
   
@@ -832,7 +879,7 @@
 
     function getNumber(row) {
       const number = row[colNames.indexOf("횟수")];
-      return `<div class="number-line">#${number}</div>`;
+      return `<div class="numberKey">#${number}</div>`;
     }
 
     function getGoogleUserContentLink(url) {
@@ -873,7 +920,7 @@
       return `<div class="star-rating">${"★".repeat(stars)}${"☆".repeat(5-stars)}</div>`;
     }
 
-    function makeModalInfo(row) {
+    function makeModalHeader(row) {
       const date   = row[colNames.indexOf("날짜")];
       const time   = row[colNames.indexOf("시간")];
       const season = row[colNames.indexOf("시즌")];
@@ -919,7 +966,7 @@
 
       const genreSpace = genrePart ? " " : "";
 
-      return `<div class="modal-info">
+      return `<div class="modal-header">
         <div class="datetime-line">
           ${dateStr}&nbsp;&nbsp;/&nbsp;&nbsp;${timeStr}
         </div>
@@ -958,17 +1005,17 @@
     }
 
 
-    function makeShortcutsHtml(row) {
+    function makeHyperLinksHtml(row) {
       const getUrl = col => {
         const url = row[colNames.indexOf(col)]?.trim();
         return url && url !== "-" ? url : null;
       };
       return `
-        <div class="modal-shortcuts">
-          ${getUrl("캐보") ? `<a href="${getUrl("캐보")}" class="shortcut-btn" target="_blank" rel="noopener">캐슷보드</a>` : ''}
-          ${getUrl("후기") ? `<a href="${getUrl("후기")}" class="shortcut-btn" target="_blank" rel="noopener">후기</a>` : ''}
-          ${getUrl("L1") ? `<a href="${getUrl("L1")}" class="shortcut-btn" target="_blank" rel="noopener">L1</a>` : ''}
-          ${getUrl("L2") ? `<a href="${getUrl("L2")}" class="shortcut-btn" target="_blank" rel="noopener">L2</a>` : ''}
+        <div class="modal-hyperlinks">
+          ${getUrl("캐보") ? `<a href="${getUrl("캐보")}" class="hyperlink-btn" target="_blank" rel="noopener">캐슷보드</a>` : ''}
+          ${getUrl("후기") ? `<a href="${getUrl("후기")}" class="hyperlink-btn" target="_blank" rel="noopener">후기</a>` : ''}
+          ${getUrl("L1") ? `<a href="${getUrl("L1")}" class="hyperlink-btn" target="_blank" rel="noopener">L1</a>` : ''}
+          ${getUrl("L2") ? `<a href="${getUrl("L2")}" class="hyperlink-btn" target="_blank" rel="noopener">L2</a>` : ''}
         </div>
       `;
     }
@@ -1117,8 +1164,8 @@
           openModal(
             imgHtml 
             + getNumber(row)
-            + makeModalInfo(row) 
-            + makeShortcutsHtml(row) 
+            + makeModalHeader(row) 
+            + makeHyperLinksHtml(row) 
             + modalContent 
             + getRatingStars(row) 
             + makeModalFooter(row)
