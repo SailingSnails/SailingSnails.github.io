@@ -636,7 +636,7 @@
 
     function updateDateHeaderSortArrow() {
       const th = document.getElementById("date-sort-header");
-      const dirArrow = renderState.sortDirection === "asc" ? "▲" : "▼";
+      const dirArrow = renderState.sortDirection === "asc" ? "▼" : "▲";
       th.innerHTML = `날짜&nbsp;<span style="font-size:0.8em;">${dirArrow}</span>`;
     }
 
@@ -843,7 +843,7 @@
           <th id="tblshow-modal-sort-sum" style="cursor:pointer;">
             총합
             <span style="font-size:0.8em;">
-              ${sortDesc ? "▼" : "－"}
+              ${sortDesc ? "↩" : "▼"}
             </span>
           </th>
         </tr></thead><tbody>`;
