@@ -264,6 +264,10 @@
       text-align: center;
       cursor: pointer;
     }
+    #date-sort-header span {
+      color: #888;
+      font-weight: normal;
+    }
     th.col-\# { font-size: 0.85em; }
     td.col-\# { color: #888; font-size: 0.75em; }
     th.col-횟수, td.col-횟수,
@@ -543,7 +547,7 @@
       <tr>
         <th class="col-#">#</th>
         <th class="col-횟수">횟수</th>
-        <th>날짜</th>
+        <th id="date-sort-header" style="cursor: pointer;">날짜</th>
         <th class="col-시간">시간</th>
         <th class="col-제작사">제작사</th>
         <th class="col-시즌">시즌</th>
@@ -603,6 +607,10 @@
         .catch(err => { alert("파일을 불러올 수 없습니다."); console.error(err); });
     };
 
+    const renderState = {
+      sortDirection: "desc"
+    };
+
     function filterAndSetData() {
       const genreIdx = colNames.indexOf("장르");
       if (mode === "전체") {
@@ -616,8 +624,38 @@
           String(row[genreIdx]||'').includes("중계") || String(row[genreIdx]||'').includes("DVD")
         );
       }
+
+      const countIdx = colNames.indexOf("횟수");
+      const sortDir = "desc";
+      data.sort((a, b) => b[countIdx] - a[countIdx]);
+
+      renderState.sortDirection = "desc";
       filterData();
+      updateDateHeaderSortArrow();
     }
+
+    function updateDateHeaderSortArrow() {
+      const th = document.getElementById("date-sort-header");
+      const dirArrow = renderState.sortDirection === "asc" ? "▲" : "▼";
+      th.innerHTML = `날짜&nbsp;<span style="font-size:0.8em;">${dirArrow}</span>`;
+    }
+
+    document.getElementById("date-sort-header").addEventListener("click", function () {
+      const countIdx = colNames.indexOf("횟수");
+
+      const newDir = renderState.sortDirection === "asc" ? "desc" : "asc";
+      renderState.sortDirection = newDir;
+
+      data.sort((a, b) => {
+        return newDir === "asc" 
+          ? a[countIdx] - b[countIdx] 
+          : b[countIdx] - a[countIdx];
+      });
+
+      updateDateHeaderSortArrow();
+
+      filterData();
+    });
 
     document.getElementById("mode-segmented").addEventListener("click", function(e) {
       if (e.target.classList.contains("segment")) {
@@ -805,7 +843,7 @@
           <th id="tblshow-modal-sort-sum" style="cursor:pointer;">
             총합
             <span style="font-size:0.8em;">
-              ${sortDesc ? "↩" : "▼"}
+              ${sortDesc ? "▼" : "－"}
             </span>
           </th>
         </tr></thead><tbody>`;
@@ -1097,7 +1135,11 @@
         
         const tdNum = document.createElement("td");
         tdNum.className = "col-#";
-        tdNum.textContent = i + 1;
+
+        const total = filtered.length;
+        const isAsc = renderState.sortDirection === "asc";
+        tdNum.textContent = isAsc ? i + 1 : total - i;
+
         tr.appendChild(tdNum);
 
         let castCellValue = null;
