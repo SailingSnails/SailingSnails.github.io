@@ -272,6 +272,7 @@
     td.col-\# { color: #888; font-size: 0.75em; }
     th.col-횟수, td.col-횟수,
     th.col-CB, td.col-CB,
+    th.col-CB2, td.col-CB2,
     th.col-캐보, td.col-캐보, 
     th.col-후기, td.col-후기,
     th.col-L1, td.col-L1,
@@ -348,6 +349,25 @@
       object-fit: contain;
       margin: 0 auto 16px auto;
       display: block;
+    }
+    .modal-img-wrap {
+      position: relative;
+    }
+    .img-arrow.right {
+      position: absolute;
+      top: 50%;
+      right: 5px;
+      transform: translateY(-50%);
+      border-radius: 25px;
+      background-color: rgba(0,0,0,0.3);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      font-size: 18px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s;
+      z-index: 10;
     }
     .numberKey {
       display: inline-block;
@@ -561,6 +581,7 @@
         <th class="col-L1">L1</th>
         <th class="col-L2">L2</th>
         <th class="col-CB">CB</th>
+        <th class="col-CB2">CB2</th>
         <th class="col-RV">RV</th>
       </tr>
     </thead>
@@ -688,9 +709,9 @@
         개츠비: { ko: "위대한 개츠비", en: "The Great Gatsby" },
       };
     const colNames = [
-      "횟수", "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "RV"
+      "횟수", "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "CB2", "RV"
     ];
-    const excludeCols = ["캐보", "후기", "L1", "L2", "CB", "RV", "횟수"];
+    const excludeCols = ["캐보", "후기", "L1", "L2", "CB", "CB2", "RV", "횟수"];
 
     function isMobile() {
       return window.innerWidth <= 600;
@@ -1125,6 +1146,23 @@
       );
     }
 
+    function getImageUrls(row) {
+      const urls = [];
+      let colNum = "";
+      let colIdx = -1;
+      while (true) {
+        const colName = "CB" + (colNum || "");
+        colIdx = colNames.indexOf(colName);
+        if (colIdx === -1) break;
+        const url = row[colIdx]?.trim();
+        if (url && url !== "-") {
+          urls.push(getGoogleUserContentLink(url));
+        }
+        colNum = colNum === "" ? 2 : colNum + 1;
+      }
+      return urls;
+    }
+
     function renderTable(filtered) {
       const search = document.getElementById("search").value.trim();
       const tbody = document.querySelector("#data-table tbody");
@@ -1135,11 +1173,9 @@
         
         const tdNum = document.createElement("td");
         tdNum.className = "col-#";
-
         const total = filtered.length;
         const isAsc = renderState.sortDirection === "asc";
         tdNum.textContent = isAsc ? i + 1 : total - i;
-
         tr.appendChild(tdNum);
 
         let castCellValue = null;
@@ -1150,7 +1186,7 @@
           const td = document.createElement("td");
           const colClass = {
             "횟수": "col-횟수",
-            "캐슷": "col-캐슷", "CB": "col-CB", "제작사": "col-제작사",
+            "캐슷": "col-캐슷", "CB": "col-CB", "CB2": "col-CB2", "제작사": "col-제작사",
             "시즌": "col-시즌", "장르": "col-장르", "시간": "col-시간",
             "캐보": "col-캐보", "후기": "col-후기", "L1": "col-L1",
             "L2": "col-L2", "날짜": "col-날짜", "자n": 'col-자n', "RV": "col-RV"
@@ -1188,14 +1224,21 @@
           tbody.querySelectorAll("tr").forEach(tr2 => tr2.classList.remove("selected-row"));
           tr.classList.add("selected-row");
 
-          const cbIdx = colNames.indexOf("CB");
-          let imgUrl = row[cbIdx]?.trim();
-          if (imgUrl && imgUrl.includes("drive.google.com")) {
-            imgUrl = getGoogleUserContentLink(imgUrl);
+          const imgUrls = getImageUrls(row);
+
+          let curIdx = 0;
+          function renderModalImage() {
+            let imgHtml = "";
+            if (imgUrls.length > 0) {
+              imgHtml = `<img src="${imgUrls[curIdx]}" class="modal-img">`;
+              if (imgUrls.length > 1) {
+                imgHtml += `
+                  <button class="img-arrow right">▶</button>
+                `;
+              }
+            }
+            return `<div class="modal-img-wrap">${imgHtml}</div>`;
           }
-          const imgHtml = imgUrl
-            ? `<img src="${imgUrl}" class="modal-img">`
-            : "";
 
           const key = row[countIdx];
           const noteObj = castNotesArr.find(obj => String(obj.key) === String(key));
@@ -1203,15 +1246,28 @@
           modalContent = boldifyModalColonLines(modalContent);
           modalContent = highlightModalKeyword(modalContent, window.lastSearchKeyword);
 
-          openModal(
-            imgHtml 
-            + getNumber(row)
-            + makeModalHeader(row) 
-            + makeHyperLinksHtml(row) 
-            + modalContent 
-            + getRatingStars(row) 
-            + makeModalFooter(row)
-          );
+          function updateModal() {
+            openModal(
+              renderModalImage() 
+              + getNumber(row)
+              + makeModalHeader(row) 
+              + makeHyperLinksHtml(row) 
+              + modalContent 
+              + getRatingStars(row) 
+              + makeModalFooter(row)
+            );
+
+            if (imgUrls.length > 1) {
+              const rightBtn = document.querySelector(".img-arrow.right");
+              if (rightBtn) rightBtn.onclick = function(e){
+                e.stopPropagation();
+                curIdx = (curIdx + 1) % imgUrls.length;
+                updateModal();
+              };
+            }
+          }
+          updateModal();
+
         });
 
         tbody.appendChild(tr);
