@@ -59,7 +59,7 @@ st.markdown(
 
 # Data
 전체 = pd.read_excel(URL)
-전체 = 전체.drop(columns=['횟수', '가격', '캐보', '후기', 'L1', 'L2', 'CB', 'RV'])
+전체 = 전체.drop(columns=['횟수', '가격', '캐보', '후기', 'L1', 'L2', 'CB', 'CB2', 'RV'])
 전체['시간'] = pd.to_datetime(전체['시간'], format='%H:%M:%S').dt.strftime('%H:%M')
 전체['날짜'] = pd.to_datetime(전체['날짜']).dt.date
 
