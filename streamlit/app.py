@@ -12,8 +12,8 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 
 
 #URL
-data_URL = '/Users/js/Desktop/RawData.xlsx'
-font_URL = '/Users/js/Desktop/Freesentation-6SemiBold.ttf'
+URL = 'https://github.com/SailingSnails/SailingSnails.github.io/raw/refs/heads/main/RawData.xlsx'
+font_URL = './streamlit/fonts/Freesentation-6SemiBold.ttf'
 
 review_URL = {
     2018: "https://docs.google.com/document/d/1ngNlvLkkbjqr2dKBcf6GSFSng658vXWsZWSRmY0p_EI/edit?tab=t.0",
