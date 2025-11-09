@@ -12,8 +12,8 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 
 
 #URL
-URL = 'https://github.com/SailingSnails/SailingSnails.github.io/raw/refs/heads/main/RawData.xlsx'
-font_URL = './streamlit/fonts/Freesentation-6SemiBold.ttf'
+data_URL = '/Users/js/Desktop/RawData.xlsx'
+font_URL = '/Users/js/Desktop/Freesentation-6SemiBold.ttf'
 
 review_URL = {
     2018: "https://docs.google.com/document/d/1ngNlvLkkbjqr2dKBcf6GSFSng658vXWsZWSRmY0p_EI/edit?tab=t.0",
@@ -23,7 +23,8 @@ review_URL = {
     2022: "https://docs.google.com/document/d/14ko3jNxFIZktf9Vp6kEA59ANtVfHfnph4zFvlagN6m8/edit?tab=t.0",
     2023: "https://docs.google.com/document/d/1Lp8e0cK20w1skw57uWFSe5gkgxcq_WRyIVKUViLO08c/edit?tab=t.0",
     2024: "https://docs.google.com/document/d/1PlCMWPXI8RFP3FU5QmjoMivZdmflKNWw6sUZKOcfaEE/edit?tab=t.0",
-    2025: "https://docs.google.com/document/d/151p6Aup0qZki6hvL_E73D-XKB7jHAqBNW0_aKy_5m9w/edit?tab=t.0"
+    2025: "https://docs.google.com/document/d/151p6Aup0qZki6hvL_E73D-XKB7jHAqBNW0_aKy_5m9w/edit?tab=t.0",
+    2026: "https://docs.google.com/document/d/1CSxTzEcx4Fgr6bF_h2g9BxJYFypmYPtv_Gc02-qe1ss/edit?tab=t.0"
 }
 
 cast_URL = {
@@ -37,12 +38,12 @@ cast_URL = {
     2025: "https://x.com/playnmusical_Q/status/1875163614967202161"
 }
 
-회전극_링크 = "https://x.com/playnmusical_Q/status/1900853298317742414"
+nth_URL = "https://x.com/playnmusical_Q/status/1900853298317742414"
 
 
 #Setting
 alt.themes.enable('dark')
-st.set_page_config(page_title='관극 정산', layout='wide', initial_sidebar_state="collapsed")
+st.set_page_config(page_title='관극 정산', layout='wide', initial_sidebar_state='collapsed')
 color_presets = {
     'default': ['#9258A8', '#BD7CCF', '#D9B3E6'],
     2019: ['#FD6666', '#FEA3A3', '#FFDFDF'],
@@ -52,6 +53,7 @@ color_presets = {
     2023: ['#703C3C', '#8E5656', '#C49A9A'],
     2024: ['#228B22', '#5DC35D', '#A4FBA6'],
     2025: ['#A13E4A', '#C56874', '#E9A8AE'],
+    2026: ['#4A4A8F', '#6C6CB0', '#B3B3DC']
 }
 
 
@@ -83,7 +85,7 @@ apply_custom_font(font_URL)
 
 
 #Filter
-전체 = pd.read_excel(URL)
+전체 = pd.read_excel(data_URL)
 전체['날짜'] = pd.to_datetime(전체['날짜'])
 years = sorted(전체['날짜'].dt.year.unique(), reverse=True)
 display_list = ['전체'] + [f"{y}년 관극 정산" for y in years]
@@ -114,7 +116,7 @@ with col3:
     col_btn1, col_btn2 = st.columns([1, 3.8])
     with col_btn1:
         st.markdown("<div style='height: 28px;'></div>", unsafe_allow_html=True)
-        st.link_button("회전극" if is_all else "캐슷 보드", 회전극_링크 if is_all else 캐보_링크)
+        st.link_button("회전극" if is_all else "캐슷 보드", nth_URL if is_all else 캐보_링크)
 
     with col_btn2:
         if not is_all:
@@ -125,7 +127,7 @@ with col3:
 if is_all:
     col_or = color_presets.get('default')
 else:
-    col_or = color_presets.get(selected_year, color_presets['default'])  # fallback to default if year not in dict
+    col_or = color_presets.get(selected_year, color_presets['default'])
 
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -331,7 +333,7 @@ else:
 
 #그래프
 fig2, ax2 = plt.subplots(figsize=(5, 5))
-draw_donut(ax2, 회전['극'], 회전['회전'], f'{올해극}극', None if selected_option == '전체' else 차이표시, 색상)
+draw_donut(ax2, 회전['극'], 회전['회전'], f'{올해극}편', None if selected_option == '전체' else 차이표시, 색상)
 
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -408,7 +410,7 @@ ax3.spines['left'].set_color('#C0C0C0')
 
 #배우
 actor_list = (df_selected_year['캐슷'].fillna('').str.strip().str.split(' ').explode())
-actor_list = actor_list[actor_list != ''].unique()  # 빈 문자열 제거
+actor_list = actor_list[actor_list != ''].unique()
 
 actor = []
 for x in actor_list:
@@ -459,6 +461,120 @@ show_order = df_selected_year['극'].unique()
 기타극 = f", 기타 {장르극['기타']}편" if 장르극['기타'] > 0 else ''
 
 극_text = f"<p style='font-size: 17px;'>{'&nbsp;' * 2}: 연극 {장르극['연극']}편, 뮤지컬 {장르극['뮤지컬']}편{기타극}</p>"
+
+
+#-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+# 기록
+전체 = 전체.copy()
+전체_직관 = 전체[전체['장르'].isin(['연극', '뮤지컬', '기타'])]
+전체_집관 = 전체[전체['장르'].str.contains('중계|DVD')]
+전체n = df_selected_year.copy()
+전체n_집관 = 전체n[전체n['장르'].str.contains('중계|DVD')]
+
+
+# 첫 관극
+min_date = 전체n['날짜'].min().date()
+
+
+# 마지막 관극
+max_date = 전체n['날짜'].max().date()
+
+
+# 방문 극장
+df_thea = 전체n[전체n['극장'] != '-']['극장'].nunique()
+n_theatre = f"{df_thea}곳"
+
+
+# 무료 중계, 유료 중계, DVD
+flive = f"{전체n_집관[전체n_집관['장르'].str.contains('무료 중계')].shape[0]}회"
+plive = f"{전체n_집관[전체n_집관['장르'].str.contains('유료 중계')].shape[0]}회"
+dvd = f"{전체n_집관[전체n_집관['장르'].str.contains('DVD')].shape[0]}회"
+
+
+#자첫극
+newsh = 전체.groupby('극')['날짜'].min().reset_index()
+n_newsh = f"{newsh[newsh['날짜'].dt.year == selected_year]['극'].nunique()}편"
+
+
+#자첫배우
+actn = 전체.loc[전체['날짜'].dt.year == selected_year, '캐슷'].str.cat(sep=' ')
+actn_list = pd.Series(actn.split()).unique()
+
+act_pren = 전체.loc[전체['날짜'].dt.year < selected_year, '캐슷'].str.cat(sep=' ')
+act_pren_list = pd.Series(act_pren.split()).unique()
+
+newac = [act for act in actn_list if act not in act_pren_list]
+
+n_newac = f"{len(newac) if len(newac) > 0 else 0}명"
+
+
+#자첫극장
+def theater(x):
+    if x == "-":
+        return np.nan
+    idx = x.find("(")
+    return x[:idx].strip() if idx >= 0 else x.strip()
+
+전체['극장_합'] = 전체['극장'].apply(theater)
+전체 = 전체.dropna(subset=['극장_합'])
+
+theater_min_date = 전체.groupby('극장_합')['날짜'].min().reset_index()
+theater_min_date['연도'] = theater_min_date['날짜'].dt.year
+theatern = theater_min_date[theater_min_date['연도'] == selected_year]
+n_newth = f"{len(theatern)}곳"
+
+
+#후기
+pos = ['극호', '호', '평타']
+n_pos = 전체n['RV'].isin(pos).sum()
+n_all = 전체n['RV'].count()
+
+if n_all >0:
+    percent = n_pos / n_all
+    per_rev = "{:.0%} 긍정적".format(percent)
+else:
+    per_rev = "-"
+
+
+#최다 관람 제작사
+comn_list = 전체n['제작사'].str.split(', ').explode().unique()
+
+company = []
+for x in comn_list:
+    filtered = 전체n['제작사'].apply(lambda y: x in y.split(', '))
+    count = filtered.sum()
+    company.append({'제작사': x, '횟수': count})
+
+제작사 = pd.DataFrame(company)
+companyn = 제작사[제작사['제작사'] != '-']
+
+max_cnt = companyn['횟수'].max()
+cpyn = companyn.loc[companyn['횟수'] == max_cnt, '제작사']
+max_cpyn = ', '.join(cpyn)
+
+
+#최다 방문 극장
+전체['극장'] = 전체['극장'].apply(theater)
+전체 = 전체.dropna(subset=['극장'])
+
+if selected_option == '전체':
+    전체nt = 전체
+else:
+    전체nt = 전체[전체['날짜'].dt.year == selected_year]
+
+counts = 전체nt['극장'].value_counts()
+max_count = counts.max()
+thea = counts[counts == max_count].index.tolist()
+
+max_thea = ', '.join(thea) if len(thea) > 1 else thea[0]
+
+
+#직/집
+off = f"{전체_직관['극'].nunique()}편, {전체_직관.shape[0]}회"
+on = f"{전체_집관['극'].nunique()}편, {전체_집관.shape[0]}회"
+onoff = f"{len(set(전체_직관['극']) & set(전체_집관['극']))}편"
 
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -528,3 +644,47 @@ with right:
             theme='streamlit',
             gridOptions=show_grid_options
         )
+
+st.markdown('<div style="height: 30px"></div>', unsafe_allow_html=True)
+
+with st.container():
+     
+    st.markdown(
+        '<p style="font-size: 22px;">《 기타 기록 》</p>',
+        unsafe_allow_html=True
+    )
+
+    labels = [
+        "첫 관극", "마지막 관극", "방문 극장",
+        "무료 중계", "유료 중계", "DVD",
+        "자첫극", "자첫배우", "자첫극장",
+        "후기", "최다 관람 제작사", "최다 방문 극장"
+    ]
+    values = [
+        min_date, max_date, n_theatre,
+        flive, plive, dvd,
+        n_newsh, n_newac, n_newth,
+        per_rev, max_cpyn, max_thea
+    ]
+
+    if selected_option == '전체':
+        labels[6], labels[7], labels[8] = "직관", "집관", "직&집"
+        values[6], values[7], values[8] = off, on, onoff
+
+    cols = st.columns(4)
+    for i, col in enumerate(cols):
+        start_idx = i * 3
+        for j in range(3):
+            idx = start_idx + j
+            
+            if idx < len(labels):
+
+                html_content = f"""
+                <p style="margin: 0;">
+                    <span style="color: #7F7F7F; font-size: 14px;">{labels[idx]}:</span> 
+                    &nbsp;
+                    <span style="color: #C0C0C0; font-size: 14px;">{values[idx]}</span>
+                </p>
+                """
+
+                col.markdown(html_content, unsafe_allow_html=True)
