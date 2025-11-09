@@ -12,7 +12,7 @@ from st_aggrid import AgGrid, GridOptionsBuilder
 
 
 #URL
-URL = 'https://github.com/SailingSnails/SailingSnails.github.io/raw/refs/heads/main/RawData.xlsx'
+data_URL = 'https://github.com/SailingSnails/SailingSnails.github.io/raw/refs/heads/main/RawData.xlsx'
 font_URL = './streamlit/fonts/Freesentation-6SemiBold.ttf'
 
 review_URL = {
