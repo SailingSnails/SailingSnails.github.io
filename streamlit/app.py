@@ -645,7 +645,7 @@ with right:
             gridOptions=show_grid_options
         )
 
-st.markdown('<div style="height: 30px"></div>', unsafe_allow_html=True)
+st.markdown('<div style="height: 15px"></div>', unsafe_allow_html=True)
 
 with st.container():
      
