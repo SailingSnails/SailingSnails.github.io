@@ -45,15 +45,16 @@ nth_URL = "https://x.com/playnmusical_Q/status/1900853298317742414"
 alt.themes.enable('dark')
 st.set_page_config(page_title='관극 정산', layout='wide', initial_sidebar_state='collapsed')
 color_presets = {
-    'default': ['#9258A8', '#BD7CCF', '#D9B3E6'],
+    'default': ['#A13E4A', '#C56874', '#E9A8AE'],
     2019: ['#FD6666', '#FEA3A3', '#FFDFDF'],
     2020: ['#4A7FB0', '#5B9BD5', '#ADC6E5'],
     2021: ['#666666', '#888888', '#BABABA'],
     2022: ['#E68AA9', '#FFA0C5', '#FFD1D4'],
     2023: ['#703C3C', '#8E5656', '#C49A9A'],
     2024: ['#228B22', '#5DC35D', '#A4FBA6'],
-    2025: ['#A13E4A', '#C56874', '#E9A8AE'],
-    2026: ['#4A4A8F', '#6C6CB0', '#B3B3DC']
+    2025: ['#C5A059', '#DDBE7E', '#F2E2C2'],
+    2026: ['#4A4A8F', '#6C6CB0', '#B3B3DC'],
+    2027: ['#9258A8', '#BD7CCF', '#D9B3E6'],
 }
 
 
