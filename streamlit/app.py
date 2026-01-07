@@ -35,7 +35,8 @@ cast_URL = {
     2022: "https://x.com/playnmusical_Q/status/1478714300579876866",
     2023: "https://x.com/playnmusical_Q/status/1681233081586552834",
     2024: "https://x.com/playnmusical_Q/status/1742747279763648953",
-    2025: "https://x.com/playnmusical_Q/status/1875163614967202161"
+    2025: "https://x.com/playnmusical_Q/status/1875163614967202161",
+    2026: "https://x.com/playnmusical_Q/status/2008840197149168080"
 }
 
 nth_URL = "https://x.com/playnmusical_Q/status/1900853298317742414"
