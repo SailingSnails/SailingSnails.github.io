@@ -240,7 +240,7 @@ def compute_tables(selected_year, selected_mode):
     극장 = pd.concat([others])
     극장_text = [
         "▶︎ ",
-        html.Span(f"{극장.shape[0] - 1}"),
+        html.Span(f"{극장.shape[0] - (1 if (극장['극장'] == '-').any() else 0)}"),
         " 곳, ",
         html.Span(f"{극장['횟수'].sum() - 극장[극장['극장'] == '-']['횟수'].sum()}", style={'color': '#0F80FF'}),
         " 회"
