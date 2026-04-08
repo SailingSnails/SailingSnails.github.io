@@ -248,7 +248,7 @@ def draw_donut(ax, values, labels, center_label, diff_label=None, diff_color='#B
     ax.pie(
         values,
         autopct='%.0f%%',
-        counterclock=False,
+        counterclock=True,
         startangle=90,
         radius=1,
         colors=col_or,
