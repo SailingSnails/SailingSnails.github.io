@@ -8,7 +8,8 @@ import base64
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
-from st_aggrid import AgGrid, GridOptionsBuilder
+from st_aggrid import GridOptionsBuilder
+import textwrap
 
 
 #URL
@@ -406,7 +407,6 @@ for spine in ['top', 'right', 'bottom']:
 ax3.spines['left'].set_color('#C0C0C0')
 
 
-
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -442,6 +442,68 @@ else:
     else f'<p style="font-size: 17px;">{"&nbsp;" * 2}{배우.shape[0]}명  (<span style="font-size: 13px; color: {색상};">{차이표시}</span>)</p>'
 )
 
+#그래프
+배우 = 배우.sort_values(['횟수', '필모'], ascending=[False, False]).head(10).copy()
+
+labels = 배우['배우'].tolist()
+필모_values = 배우['필모'].tolist()
+횟수_values = 배우['횟수'].tolist()
+
+wrapped_labels = ['  ' + textwrap.fill(label, width=12) for label in labels]
+n = len(labels)
+
+bar_h = 1.2
+gap = 0.8
+y = np.arange(n) * (bar_h + gap)
+
+fig_h = max(6, n * 1.1)
+fig4, ax4 = plt.subplots(figsize=(5, fig_h), constrained_layout=True)
+fig4.patch.set_facecolor('none')
+ax4.set_facecolor('none')
+
+bars_count = ax4.barh(
+    y,
+    횟수_values,
+    height=bar_h,
+    color=col_or[0],
+    edgecolor='#3B3838'
+)
+
+bars_filmo = ax4.barh(
+    y,
+    필모_values,
+    height=0.4,
+    color=col_or[2],
+    edgecolor='#3B3838',
+    alpha=0.8,
+    linewidth=1.5
+)
+
+max_filmo = np.max(필모_values)
+max_filmo_idx = np.where(np.array(필모_values) == max_filmo)[0]
+highlight_color = "#3B3838E4"
+for idx in max_filmo_idx:
+    bars_filmo[idx].set_facecolor(highlight_color)
+
+ax4.bar_label(
+    bars_count,
+    labels=[f'{int(v)}' for v in 횟수_values],
+    padding=12,
+    color='#B7B7B7',
+    fontsize=14,
+    fontweight='bold'
+)
+
+ax4.set_yticks(y)
+ax4.set_yticklabels(wrapped_labels, color='#D9D9D9', fontsize=18, fontweight='bold')
+ax4.tick_params(axis='y', pad=15)
+ax4.invert_yaxis()
+ax4.set_xticks([])
+
+for spine in ['top', 'right', 'bottom']:
+    ax4.spines[spine].set_visible(False)
+ax4.spines['left'].set_color('#C0C0C0')
+
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -464,6 +526,51 @@ show_order = df_selected_year['극'].unique()
 
 극_text = f"<p style='font-size: 17px;'>{'&nbsp;' * 2}: 연극 {장르극['연극']}편, 뮤지컬 {장르극['뮤지컬']}편{기타극}</p>"
 
+#그래프
+극 = 극.sort_values('횟수', ascending=False).head(10).copy()
+
+labels = 극['극'].tolist()
+values = 극['횟수'].tolist()
+
+wrapped_labels = ['  ' + textwrap.fill(label, width=12) for label in labels]
+n = len(labels)
+
+bar_h = 1.2
+gap = 0.8
+y = np.arange(n) * (bar_h + gap)
+
+fig_h = max(6, n * 1.1)
+fig5, ax5 = plt.subplots(figsize=(5, fig_h), constrained_layout=True)
+fig5.patch.set_facecolor('none')
+ax5.set_facecolor('none')
+
+bars = ax5.barh(
+    y,
+    values,
+    height=bar_h,
+    color=col_or[0],
+    edgecolor='#3B3838'
+)
+
+ax5.bar_label(
+    bars,
+    labels=[f'{int(v)}' for v in values],
+    padding=12,
+    color='#B7B7B7',
+    fontsize=14,
+    fontweight='bold'
+)
+
+ax5.set_yticks(y)
+ax5.set_yticklabels(wrapped_labels, color='#D9D9D9', fontsize=18, fontweight='bold')
+ax5.tick_params(axis='y', pad=15)
+ax5.invert_yaxis()
+ax5.set_xticks([])
+
+for spine in ['top', 'right', 'bottom']:
+    ax5.spines[spine].set_visible(False)
+ax5.spines['left'].set_color('#C0C0C0')
+
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -485,7 +592,10 @@ max_date = 전체n['날짜'].max().date()
 
 
 # 방문 극장
-df_thea = 전체n[전체n['극장'] != '-']['극장'].nunique()
+thea_filtered = 전체n[전체n['극장'] != '-']['극장']
+thea_cleaned = thea_filtered.str.split('(').str[0].str.strip()
+df_thea = thea_cleaned.nunique()
+
 n_theatre = f"{df_thea}곳"
 
 
@@ -596,9 +706,6 @@ def grid(df, column_widths):
         )
     return builder.build()
 
-actor_grid_options = grid(배우, {'배우': 160, '횟수': 70, '필모': 70})
-show_grid_options = grid(극, {'극': 230, '횟수': 70})
-
 
 #Layout
 left, right = st.columns([3, 2])
@@ -622,30 +729,17 @@ with left:
         st.markdown('<p style="font-size: 22px;">《 시즌 》</p>', unsafe_allow_html=True)
         st.pyplot(fig3)
 
-fixed_height = 555
 with right:
     up1, up2 = st.columns(2)
     with up1:
         st.markdown('<p style="font-size: 22px;">《 배우 》</p>', unsafe_allow_html=True)
         st.markdown(배우_text, unsafe_allow_html=True)
-        AgGrid(
-            배우,
-            height=fixed_height,
-            fit_columns_on_grid_load=True,
-            theme='streamlit',
-            gridOptions=actor_grid_options
-        )
+        st.pyplot(fig4)
 
     with up2:
         st.markdown('<p style="font-size: 22px;">《 작품 》</p>', unsafe_allow_html=True)
         st.markdown(극_text, unsafe_allow_html=True)
-        AgGrid(
-            극,
-            height=fixed_height,
-            fit_columns_on_grid_load=True,
-            theme='streamlit',
-            gridOptions=show_grid_options
-        )
+        st.pyplot(fig5)
 
 st.markdown('<div style="height: 15px"></div>', unsafe_allow_html=True)
 
