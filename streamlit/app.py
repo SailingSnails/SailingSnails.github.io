@@ -466,7 +466,8 @@ bars_count = ax4.barh(
     횟수_values,
     height=bar_h,
     color=col_or[0],
-    edgecolor='#3B3838'
+    edgecolor='#3B3838',
+    linewidth=2
 )
 
 bars_filmo = ax4.barh(
@@ -532,7 +533,7 @@ show_order = df_selected_year['극'].unique()
 labels = 극['극'].tolist()
 values = 극['횟수'].tolist()
 
-wrapped_labels = ['  ' + textwrap.fill(label, width=12) for label in labels]
+wrapped_labels = ['  ' + textwrap.fill(label, width=13) for label in labels]
 n = len(labels)
 
 bar_h = 1.2
@@ -549,7 +550,8 @@ bars = ax5.barh(
     values,
     height=bar_h,
     color=col_or[0],
-    edgecolor='#3B3838'
+    edgecolor='#3B3838',
+    linewidth=2
 )
 
 ax5.bar_label(
