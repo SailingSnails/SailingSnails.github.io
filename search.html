@@ -1117,10 +1117,6 @@
 
 
     //Table
-    function formatCastDisplay(str) {
-      return str.trim().replace(/ /g, ", ").replace(/_/g, " ");
-    }
-
     function getDisplayTitle(showName, nth) {
       for (const [key, pair] of Object.entries(showTitleMap)) {
         if (
@@ -1209,7 +1205,7 @@
           }
           else if (col === "캐슷") {
             castCellValue = cell;
-            disp = cell ? formatCastDisplay(String(cell)) : "";
+            disp = cell ? String(cell) : "";
             td.innerHTML = highlightText(disp, search);
           }
           else if (col === "극") {
@@ -1377,7 +1373,7 @@
         } else if (selected_col === "캐슷") {
           const idx = colNames.indexOf("캐슷");
           filtered = data.filter(row =>
-            (" " + row[idx] + " ").toLowerCase().includes(" " + searchLower + " ")
+            (", " + row[idx] + ", ").toLowerCase().includes(", " + searchLower + ", ")
           );
         } else if (selected_col === "후기") {
           const idx = colNames.indexOf("RV");

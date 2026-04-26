@@ -670,16 +670,16 @@ def compute_tables(selected_year, selected_mode):
     ], style={'marginBottom': '50px'})
 
     #-----------
-    actor_list = 전체['캐슷'].str.strip().str.split(' ').explode().unique().tolist()
+    actor_list = 전체['캐슷'].str.strip().str.split(', ').explode().unique().tolist()
     actor = []
     for x in actor_list:
-        filtered = 전체['캐슷'].apply(lambda y: (' '+x+' ') in y)
+        filtered = 전체['캐슷'].apply(lambda y: (', '+x+', ') in ', '+y+', ')
         count = filtered.sum()
         nshow = 전체[filtered]['극'].nunique()
         show = ' \u00A0|\u00A0 '.join(전체[filtered]['극'].unique())
         actor.append({'배우': x, '횟수': count, '필모': nshow, '전체 필모': show})
     배우 = pd.DataFrame(actor).sort_values(by=['횟수', '필모'], ascending=False)
-    배우['배우'] = 배우['배우'].str.replace('_', ' ').str.replace(r'\s*\[.*?\]', '', regex=True)
+    배우['배우'] = 배우['배우'].str.replace(r'\s*\[.*?\]', '', regex=True)
     배우_text = (f'▶︎ {배우.shape[0]} 명')
 
     max_value = 배우['필모'].max()
@@ -733,11 +733,11 @@ def compute_tables(selected_year, selected_mode):
     ], style={'marginBottom': '50px'})
 
     #-----------
-    list = 전체['캐슷'].str.strip().str.split(' ').explode().unique().tolist()
+    list = 전체['캐슷'].str.strip().str.split(', ').explode().unique().tolist()
     onfactor = []
     for x in list:
-        off_filtered = 전체_직관['캐슷'].apply(lambda y: (' '+x+' ') in y) 
-        on_filtered = 전체_집관['캐슷'].apply(lambda y: (' '+x+' ') in y)
+        off_filtered = 전체_직관['캐슷'].apply(lambda y: (', '+x+', ') in ', '+y+', ') 
+        on_filtered = 전체_집관['캐슷'].apply(lambda y: (', '+x+', ') in ', '+y+', ') 
         s1 = off_filtered.sum()
         s2 = on_filtered.sum()
         onoff = f'{s1} (+{s2})'
@@ -767,7 +767,7 @@ def compute_tables(selected_year, selected_mode):
             })
     onfactor = pd.DataFrame(onfactor).sort_values('소팅용', ascending=False)
     직집배우 = onfactor[['배우', '직관 (+집관)', '직관 필모', '필모', '전체 필모']]
-    직집배우['배우'] = 직집배우['배우'].str.replace('_', ' ').str.replace(r'\s*\[.*?\]', '', regex=True)
+    직집배우['배우'] = 직집배우['배우'].str.replace(r'\s*\[.*?\]', '', regex=True)
     직집배우_text = (f'▶︎ 직관: {(onfactor['소팅용']>1000000000).sum()} 명')
 
     max_value = 직집배우['직관 필모'].max()

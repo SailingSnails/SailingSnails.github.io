@@ -411,12 +411,12 @@ ax3.spines['left'].set_color('#C0C0C0')
 
 
 #배우
-actor_list = (df_selected_year['캐슷'].fillna('').str.strip().str.split(' ').explode())
+actor_list = (df_selected_year['캐슷'].fillna('').str.strip().str.split(', ').explode())
 actor_list = actor_list[actor_list != ''].unique()
 
 actor = []
 for x in actor_list:
-    filtered = df_selected_year['캐슷'].apply(lambda y: (' ' + x + ' ') in f' {y} ')
+    filtered = df_selected_year['캐슷'].apply(lambda y: (', ' + x + ', ') in f', {y}, ')
     count = filtered.sum()
     nshow = df_selected_year[filtered]['극'].nunique()
     actor.append({'배우': x, '횟수': count, '필모': nshow})
@@ -424,10 +424,10 @@ for x in actor_list:
 배우 = pd.DataFrame(actor)
 배우['배우'] = pd.Categorical(배우['배우'], categories=actor_list, ordered=True)
 배우 = 배우.sort_values(by=['횟수', '필모', '배우'], ascending=[False, False, True])
-배우['배우'] = 배우['배우'].apply(lambda x: x.replace('_', ' ').replace('[', ' [').replace('(', ' ('))
+배우['배우'] = 배우['배우'].apply(lambda x: x.replace('[', ' ['))
 
 
-actor_diff = 배우.shape[0] - df_year_before['캐슷'].str.strip().str.split().explode().nunique()
+actor_diff = 배우.shape[0] - df_year_before['캐슷'].str.strip().str.split(', ').explode().nunique()
 
 if actor_diff > 0:
     차이표시, 색상 = f'▲ {actor_diff}', '#FD6666'
@@ -613,11 +613,11 @@ n_newsh = f"{newsh[newsh['날짜'].dt.year == selected_year]['극'].nunique()}�
 
 
 #자첫배우
-actn = 전체.loc[전체['날짜'].dt.year == selected_year, '캐슷'].str.cat(sep=' ')
-actn_list = pd.Series(actn.split()).unique()
+actn = 전체.loc[전체['날짜'].dt.year == selected_year, '캐슷'].str.cat(sep=', ')
+actn_list = pd.Series(actn.split(', ')).unique()
 
-act_pren = 전체.loc[전체['날짜'].dt.year < selected_year, '캐슷'].str.cat(sep=' ')
-act_pren_list = pd.Series(act_pren.split()).unique()
+act_pren = 전체.loc[전체['날짜'].dt.year < selected_year, '캐슷'].str.cat(sep=', ')
+act_pren_list = pd.Series(act_pren.split(', ')).unique()
 
 newac = [act for act in actn_list if act not in act_pren_list]
 
