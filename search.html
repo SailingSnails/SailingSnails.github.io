@@ -991,7 +991,7 @@
         row[colNames.indexOf("극")],
         row[colNames.indexOf("자n")]
       );
-      const nth    = row[colNames.indexOf("자n")];
+      const nth    = row[colNames.indexOf("자n")].replace(/[()]/g, "");
 
       let dateStr = date;
       let dayStr = "";
