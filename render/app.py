@@ -234,8 +234,8 @@ def compute_tables(selected_year, selected_mode):
     if not dash.empty:
         dash_row = dash.iloc[0]
     else:
-        dash_row = {'극장': '-', '횟수': '0', '극': '0'}
-    dash_values = [dash_row['극장'], dash_row['횟수'], dash_row['극']]
+        dash_row = {'극장': '(집관)', '횟수': '0', '극': '0'}
+    dash_values = ['(집관)', dash_row['횟수'], dash_row['극']]
     others = 극장[극장['극장'] != '-']
     극장 = pd.concat([others])
     극장_text = [
@@ -383,8 +383,8 @@ def compute_tables(selected_year, selected_mode):
     if not dash.empty:
         dash_row = dash.iloc[0]
     else:
-        dash_row = {'제작사': '-', '횟수': '0', '극': '0'}
-    dash_values = [dash_row['제작사'], dash_row['횟수'], dash_row['극']]
+        dash_row = {'제작사': '(해외 제작사 등)', '횟수': '0', '극': '0'}
+    dash_values = ['(해외 제작사 등)', dash_row['횟수'], dash_row['극']]
     others = 제작사[제작사['제작사'] != '-']
     제작사 = pd.concat([others], ignore_index= True)
     제작사_text = f'▶︎ {others.shape[0]} 곳'
@@ -504,8 +504,8 @@ def compute_tables(selected_year, selected_mode):
     if not dash.empty:
         dash_row = dash.iloc[0]
     else:
-        dash_row = {'제작사': '-', '횟수': '0 (+0)', '극': '0 (+0)'}
-    dash_values = [dash_row['제작사'], dash_row['횟수'], dash_row['극']]
+        dash_row = {'제작사': '(해외 제작사 등)', '횟수': '0 (+0)', '극': '0 (+0)'}
+    dash_values = ['(해외 제작사 등)', dash_row['횟수'], dash_row['극']]
     others = onfc[onfc['제작사'] != '-']
     직집제작사 = pd.concat([others], ignore_index=True)[['제작사', '횟수', '직관극', '극']]
     직집제작사_text = (f'▶︎ 직관: {(others["직관"] >= 1).sum()} 곳')
