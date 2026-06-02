@@ -176,7 +176,7 @@ def compute_tables(selected_year, selected_mode):
     연도2 = 연도.copy()
     연도2['극'] = 연도2['연도'].apply(lambda y: 전체[전체['날짜'].dt.year == y]['극'].nunique())
     연도2 = 연도2[['연도', '극', '횟수']]
-    연도2_text = f'▶︎ {전체['극'].nunique()} 편, {연도2["횟수"].sum()} 회'
+    연도2_text = f'▶︎ {전체['극'].nunique()} 편, {연도2['횟수'].sum()} 회'
 
     전체_직관 = 전체[전체['장르'].isin(['연극', '뮤지컬', '기타'])]
     전체_집관 = 전체[전체['장르'].str.contains('중계|DVD')]
@@ -188,9 +188,9 @@ def compute_tables(selected_year, selected_mode):
     })
     연도3_text = html.P([
         "▶︎ 직관: ",
-        html.Span(f"{연도3["직관"].sum()}", style={'color': '#0F80FF'}),
+        html.Span(f"{연도3['직관'].sum()}", style={'color': '#0F80FF'}),
         " 회, 집관: ",
-        html.Span(f"{연도3["집관"].sum()}", style={'color': '#E91E63'}),
+        html.Span(f"{연도3['집관'].sum()}", style={'color': '#E91E63'}),
         " 회"
     ], style={'margin': '0 0 5px 0'})
 
@@ -212,7 +212,7 @@ def compute_tables(selected_year, selected_mode):
             '극': show_counts.get(review, 0)
         })
     후기 = pd.DataFrame(review_data)
-    후기_text = f'▶︎ {후기["횟수"].sum()} 회  ({(전체['RV'].isin(['극호', '호', '평타']).mean() * 100).round(1)}%)'
+    후기_text = f'▶︎ {후기['횟수'].sum()} 회  ({(전체['RV'].isin(['극호', '호', '평타']).mean() * 100).round(1)}%)'
 
     표_후기 = create_table_3("【 후기 】", 후기_text, 후기, table_style, use_622=True)
 
@@ -508,7 +508,7 @@ def compute_tables(selected_year, selected_mode):
     dash_values = ['(해외 제작사 등)', dash_row['횟수'], dash_row['극']]
     others = onfc[onfc['제작사'] != '-']
     직집제작사 = pd.concat([others], ignore_index=True)[['제작사', '횟수', '직관극', '극']]
-    직집제작사_text = (f'▶︎ 직관: {(others["직관"] >= 1).sum()} 곳')
+    직집제작사_text = (f'▶︎ 직관: {(others['직관'] >= 1).sum()} 곳')
 
     max_value = 직집제작사.loc[직집제작사['제작사'] != '-', '직관극'].max()
     style_data_conditional = [
