@@ -610,6 +610,9 @@
       fetch("cast_notes.json")
         .then(res => res.json())
         .then(json => castNotesArr = json);
+      fetch("../SailingSnails/show_titles.json")
+        .then(res => res.json())
+        .then(json => showTitleMap = json);
       fetch("RawData.xlsx")
         .then(res => res.arrayBuffer())
         .then(dataArr => {
@@ -688,30 +691,7 @@
     });
 
 
-    const showTitleMap = {
-        스위니: { ko: "스위니 토드", en: "Sweeney Todd" },
-        매다리: { ko: "매디슨 카운티의 다리", en: "The Bridges of Madison County" },
-        킹키: { ko: "킹키부츠", en: "Kinky Boots" },
-        짘슈: { ko: "지저스 크라이스트 수퍼스타", en: "Jesus Christ Superstar" },
-        넥: { ko: "넥스트 투 노멀", en: "Next to Normal" },
-        하타: { ko: "하데스타운", en: "Hadestown" },
-        물랑: { ko: "물랑루즈!", en: "Moulin Rouge!" },
-        오유: { ko: "오페라의 유령", en: "The Phantom of the Opera" },
-        레미: { ko: "레미제라블", en: "Les Misérables" },
-        라이온킹: { ko: "라이온 킹", en: "The Lion King" },
-        시카고: { ko: "시카고", en: "Chicago" },
-        알라딘: { ko: "알라딘", en: "Aladdin" },
-        구텐: { ko: "구텐버그", en: "Gutenberg!" },
-        위키드: { ko: "위키드", en: "Wicked" },
-        저받아: { ko: "해리포터와 저주받은 아이", en: "Harry Potter and the Cursed Child" },
-        프로즌: { ko: "겨울왕국", en: "Frozen" },
-        식스: { ko: "식스 더 뮤지컬", en: "Six" },
-        개츠비: { ko: "위대한 개츠비", en: "The Great Gatsby" },
-        컴프롬: { ko: "컴프롬어웨이", en: "Come From Away" },
-        아싸: { ko: "아웃사이더즈", en: "The Outsiders" },
-        렌트: { ko: "렌트", en: "Rent" },
-        헤더스: { ko: "헤더스", en: "Heathers" },
-      };
+    let showTitleMap = {};
     const colNames = [
       "횟수", "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "CB2", "RV"
     ];
