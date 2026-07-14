@@ -610,7 +610,7 @@
       fetch("cast_notes.json")
         .then(res => res.json())
         .then(json => castNotesArr = json);
-      fetch("../SailingSnails/show_titles.json")
+      fetch("show_titles.json")
         .then(res => res.json())
         .then(json => showTitleMap = json);
       fetch("RawData.xlsx")
