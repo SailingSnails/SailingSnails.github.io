@@ -55,9 +55,9 @@ color_presets = {
     2023: ['#703C3C', '#8E5656', '#C49A9A'],
     2024: ['#228B22', '#5DC35D', '#A4FBA6'],
     2025: ['#C5A059', '#DDBE7E', '#F2E2C2'],
-    2026: ['#9258A8', '#BD7CCF', '#D9B3E6'],
-    2027: ['#4A4A8F', '#6C6CB0', '#B3B3DC'],
+    2026: ['#7F8C8D', '#BDC3C7', '#ECF0F1'],
 }
+red_themes = [2019, 2022, 2023, 'default']
 
 
 #Font
@@ -516,9 +516,15 @@ bars_filmo = ax4.barh(
 
 max_filmo = np.max(필모_values)
 max_filmo_idx = np.where(np.array(필모_values) == max_filmo)[0]
-highlight_color = "#3B3838E4"
+
+highlight_color = "#E9A8AE"
+current_theme_key = 'default' if is_all else selected_year
+if current_theme_key in red_themes:
+    highlight_color = "#F2D06B" 
+
 for idx in max_filmo_idx:
     bars_filmo[idx].set_facecolor(highlight_color)
+    bars_filmo[idx].set_alpha(1.0)
 
 ax4.bar_label(
     bars_count,
