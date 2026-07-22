@@ -273,6 +273,7 @@
     th.col-횟수, td.col-횟수,
     th.col-CB, td.col-CB,
     th.col-CB2, td.col-CB2,
+    th.col-CB3, td.col-CB3,
     th.col-캐보, td.col-캐보, 
     th.col-후기, td.col-후기,
     th.col-L1, td.col-L1,
@@ -582,6 +583,7 @@
         <th class="col-L2">L2</th>
         <th class="col-CB">CB</th>
         <th class="col-CB2">CB2</th>
+        <th class="col-CB3">CB3</th>
         <th class="col-RV">RV</th>
       </tr>
     </thead>
@@ -693,9 +695,9 @@
 
     let showTitleMap = {};
     const colNames = [
-      "횟수", "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "CB2", "RV"
+      "횟수", "날짜", "시간", "제작사", "시즌", "장르", "극", "자n", "캐슷", "극장", "캐보", "후기", "L1", "L2", "CB", "CB2", "CB3", "RV"
     ];
-    const excludeCols = ["캐보", "후기", "L1", "L2", "CB", "CB2", "RV", "횟수"];
+    const excludeCols = ["캐보", "후기", "L1", "L2", "CB", "CB2", "CB3", "RV", "횟수"];
 
     function isMobile() {
       return window.innerWidth <= 600;
@@ -1166,7 +1168,7 @@
           const td = document.createElement("td");
           const colClass = {
             "횟수": "col-횟수",
-            "캐슷": "col-캐슷", "CB": "col-CB", "CB2": "col-CB2", "제작사": "col-제작사",
+            "캐슷": "col-캐슷", "CB": "col-CB", "CB2": "col-CB2", "CB3": "col-CB3", "제작사": "col-제작사",
             "시즌": "col-시즌", "장르": "col-장르", "시간": "col-시간",
             "캐보": "col-캐보", "후기": "col-후기", "L1": "col-L1",
             "L2": "col-L2", "날짜": "col-날짜", "자n": 'col-자n', "RV": "col-RV"
