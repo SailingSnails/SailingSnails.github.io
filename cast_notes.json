@@ -685,7 +685,7 @@
   },
   {
     "key": 172,
-    "note": "조구: 김태환\n여리: 김채율\n필동: 한승렬"
+    "note": "조구: 김태환(오)\n여리: 김채율\n필동: 한승렬"
   },
   {
     "key": 173,
@@ -773,7 +773,7 @@
   },
   {
     "key": 194,
-    "note": "갈릴레오: 임병근\n케플러: 정휘\n마리아: 홍지희"
+    "note": "갈릴레오 갈릴레이: 임병근\n요하네스 케플러: 정휘\n마리아 첼레스테(비르지니아): 홍지희"
   },
   {
     "key": 195,
@@ -3129,7 +3129,7 @@
   },
   {
     "key": 783,
-    "note": "Clyde Barrow : JEREMY JORDAN\nBonnie Parker : FRANCES McCANN\nClyde Ivan 'Buck' Barrow : GEORGE MAGUIRE\nBlanche Barrow : NATALIE MCQUEEN\nPreacher : TREVOR NICHOLAS\nTed : LIAM TAMNE\nCumie Barrow : GILLIAN BEVAN\nEmma Parker : JULIE YAMMANEE\nTrish : ELOISE DAVIES\nGovenor Miriam Ferguson / Eleanore : DEBBIE KURUP\nStella : CASEY AL-SHAQSY\nCaptain Frank Hamer : RUSSELL WILCOX\nSherriff Schmid : JEREMY SECOMB\nBob Alcorn : MATTHEW MALTHOUSE\nBud / Archie : SIMON ANTHONY\nHenry Barrow : ADRIAN GROVE\nYoung Bonnie : BEA WARD\nYoung Clyde : ALBERT ATACK"
+    "note": "Clyde Barrow : JEREMY JORDAN\nBonnie Parker : FRANCES McCANN\nClyde Ivan 'Buck' Barrow : GEORGE MAGUIRE\nBlanche Barrow : NATALIE McQUEEN\nPreacher : TREVOR NICHOLAS\nTed : LIAM TAMNE\nCumie Barrow : GILLIAN BEVAN\nEmma Parker : JULIE YAMMANEE\nTrish : ELOISE DAVIES\nGovenor Miriam Ferguson / Eleanore : DEBBIE KURUP\nStella : CASEY AL-SHAQSY\nCaptain Frank Hamer : RUSSELL WILCOX\nSherriff Schmid : JEREMY SECOMB\nBob Alcorn : MATTHEW MALTHOUSE\nBud / Archie : SIMON ANTHONY\nHenry Barrow : ADRIAN GROVE\nYoung Bonnie : BEA WARD\nYoung Clyde : ALBERT ATACK"
   },
   {
     "key": 784,
@@ -3162,5 +3162,13 @@
   {
     "key": 791,
     "note": "갈릴레오: 김지철\n케플러: 강병훈\n마리아: 유낙원"
+  },
+  {
+    "key": 792,
+    "note": "매그너스: 최석진\n아벨: 박정원\n프레드릭: 김준식\n하겐: 김지웅\n재스퍼: 김태환\n클레어: 이형훈"
+  },
+  {
+    "key": 793,
+    "note": "멜라스: 문성일(원우준)\n아가토: 신수빈(신혁수)\n피론: 최유현"
   }
 ]
