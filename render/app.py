@@ -561,14 +561,15 @@ def compute_tables(selected_year, selected_mode):
     #-----------
     극 = 전체['극'].value_counts(sort = False).to_frame().reset_index()
     극.columns = ['극', '횟수']
-    극 = 극.sort_values(by= ['횟수'], ascending=False)
+    극['#'] = range(1,len(극)+1)
+    극 = 극.sort_values(by=['횟수', '#'], ascending=[False, True])
     극_text = (f'▶︎ {극.shape[0]} 편, {극['횟수'].sum()} 회')
-
+    
     unique_sorted = 극['횟수'].drop_duplicates().sort_values(ascending=False).values
     max_value = unique_sorted[0] if len(unique_sorted) > 0 else None
     second_value = unique_sorted[1] if len(unique_sorted) > 1 else None
     third_value = unique_sorted[2] if len(unique_sorted) > 2 else None
-
+    
     style_data_conditional = [
         {
             'if': {
@@ -589,12 +590,12 @@ def compute_tables(selected_year, selected_mode):
             'backgroundColor': '#FFF4DF'
         },
     ]
-
+    
     표_극 = html.Div([
         html.H3("【 극 】", style={'fontSize': 22}),
         html.P(극_text, style={'fontSize': 16, 'margin': 5}),
         dash_table.DataTable(
-            columns=[{"name": i, "id": i} for i in 극.columns],
+            columns=[{"name": i, "id": i} for i in 극.columns if i != '#'],
             data=극.to_dict('records'),
             page_action='none',
             css=[{
