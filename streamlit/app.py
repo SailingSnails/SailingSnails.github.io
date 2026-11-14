@@ -667,6 +667,8 @@ n_newac = f"{len(newac) if len(newac) > 0 else 0}명"
 
 #자첫극장
 def theater(x):
+    if not isinstance(x, str):
+        return np.nan
     if x == "-":
         return np.nan
     idx = x.find("(")
